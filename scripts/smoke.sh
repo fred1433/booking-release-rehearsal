@@ -9,6 +9,7 @@ for i in $(seq 1 30); do
   sleep 5
 done
 [ "$GOT" = "$SHA" ] || { echo "health reports '$GOT', expected $SHA"; exit 1; }
-curl -fsS "$BASE/" | grep -q "<title>" || { echo "page missing"; exit 1; }
-curl -fsS "$BASE/api/config" | grep -q '"durations"' || { echo "config missing"; exit 1; }
+# Read whole bodies first: with pipefail, "curl | grep -q" fails when grep exits early.
+PAGE=$(curl -fsS "$BASE/"); grep -q "<title>" <<<"$PAGE" || { echo "page missing"; exit 1; }
+CFG=$(curl -fsS "$BASE/api/config"); grep -q '"durations"' <<<"$CFG" || { echo "config missing"; exit 1; }
 echo "smoke ok: $BASE runs $SHA"
