@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Private session booking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wall:#EDEFF1; --paper:#FBFBFA; --ink:#211B2C; --pencil:#625C6E; --line:#D5D3DA;
+  --satin:#F1D5CE; --satin-ink:#7A3B33; --tape:#D81F5A; --tape-ink:#fff; --standby:#F2C230;
+  --ok:#1F7A55; --err:#B3261E;
+  --serif:"Bodoni Moda", "Didot", Georgia, serif; --sans:"Hanken Grotesk", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:22px 18px 28px}
+h1{font:600 30px/1.1 var(--serif);margin:0;letter-spacing:-.01em}
+.lede{color:var(--pencil);margin:6px 0 0;font-size:15px;max-width:58ch}
+.deploy{display:inline-flex;gap:6px;align-items:center;margin-top:12px;font-size:13px;color:var(--pencil)}
+.deploy b{font-weight:600;color:var(--ink);background:var(--standby);padding:1px 7px;transform:rotate(-1deg);display:inline-block}
+.deploy b.prod{background:var(--tape);color:var(--tape-ink)}
+fieldset{border:0;padding:0;margin:22px 0 0;min-width:0}
+legend{font-weight:600;font-size:14px;margin-bottom:8px;padding:0}
+.durations{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:999px;padding:7px 14px;font:500 15px var(--sans);cursor:pointer}
+.chip small{color:var(--pencil);font-weight:400;margin-left:4px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.chip[aria-pressed="true"] small{color:#CFCAD8}
+.dates{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:thin}
+.date{flex:0 0 auto;width:58px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 0;text-align:center;cursor:pointer;font:inherit;color:inherit}
+.date .dw{display:block;font-size:12px;color:var(--pencil)}
+.date .dd{display:block;font:600 22px/1.1 var(--serif)}
+.date[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 -4px 0 var(--tape)}
+.date:disabled{opacity:.35;cursor:default}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.slot{position:relative;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px 7px;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.slot .t{display:block;font:600 24px/1.05 var(--serif)}
+.slot .p{display:block;font-size:12.5px;color:var(--pencil)}
+.slot[aria-pressed="true"]{border:2px solid var(--tape);padding:7px 9px 6px}
+.slot:disabled{cursor:default;background:var(--satin);border-color:var(--satin);color:var(--satin-ink)}
+.slot:disabled .p{color:var(--satin-ink)}
+.slot:disabled .t{text-decoration:line-through;text-decoration-thickness:1.5px}
+.empty{color:var(--pencil);font-size:14.5px;margin:4px 0 0}
+.confirm{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:14px 16px;border-radius:12px;background:var(--wall)}
+.confirm p{margin:0;flex:1 1 260px;font-size:15px}
+.btn{background:var(--tape);color:var(--tape-ink);border:0;border-radius:999px;padding:10px 18px;font:600 15px var(--sans);cursor:pointer}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.msg{min-height:1.5em;margin:10px 0 0;font-size:14.5px}
+.msg.ok{color:var(--ok)} .msg.err{color:var(--err)}
+h2{font:600 20px/1.2 var(--serif);margin:30px 0 8px}
+.mine{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.mine li{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.mine li .w b{font-weight:600}
+.mine li .w span{color:var(--pencil)}
+.mine li.cancelled .w{color:var(--pencil);text-decoration:line-through}
+.mine .x{background:none;border:0;color:var(--tape);font:600 14px var(--sans);cursor:pointer;padding:6px}
+.drills{display:grid;gap:12px;margin-top:6px}
+.drill{border:1px dashed #B9B5C2;border-radius:12px;padding:12px 14px}
+.drill p{margin:0 0 10px;font-size:14.5px;color:var(--pencil)}
+.drill p b{color:var(--ink);font-weight:600}
+.drill ol{margin:10px 0 0;padding-left:20px;font-size:14px}
+.drill ol li{margin:2px 0}
+.code{font-variant-numeric:tabular-nums;font-weight:600}
+.c2{color:var(--ok)} .c4{color:var(--err)}
+footer{margin-top:28px;font-size:13px;color:var(--pencil);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+footer button{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;font:inherit;cursor:pointer}
+:focus-visible{outline:2.5px solid var(--tape);outline-offset:2px}
+@media (max-width:480px){h1{font-size:26px}.slot .t{font-size:21px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Book a private session</h1>
+  <p class="lede">A synthetic teacher in Paris, you in Sydney. Prices in Australian dollars; payment is simulated and nothing is charged.</p>
+  <div class="deploy" id="deploy" aria-live="polite">Checking which release is live…</div>
+
+  <fieldset>
+    <legend>Session length</legend>
+    <div class="durations" id="durations"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Day (Sydney)</legend>
+    <div class="dates" id="dates"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend id="slotsLegend">Start time</legend>
+    <div class="slots" id="slots"></div>
+    <p class="empty" id="slotsEmpty" hidden></p>
+  </fieldset>
+
+  <div class="confirm">
+    <p id="summary">Pick a start time.</p>
+    <button class="btn" id="book" disabled>Book this session</button>
+  </div>
+  <p class="msg" id="msg" role="status"></p>
+
+  <h2>Your sessions</h2>
+  <ul class="mine" id="mine"></ul>
+  <p class="empty" id="mineEmpty">No sessions yet.</p>
+
+  <h2>Try to break it</h2>
+  <div class="drills">
+    <div class="drill">
+      <p><b>Two overlapping requests at once.</b> Sends a 60-minute session and a 30-minute session that starts half-way through it, in the same instant.</p>
+      <button class="btn ghost" id="race">Send both requests</button>
+      <ol id="raceOut" hidden></ol>
+    </div>
+    <div class="drill">
+      <p><b>A reply that never arrives.</b> Books a session, throws the reply away, then retries with the same request key, as a phone on a bad connection would.</p>
+      <button class="btn ghost" id="lost">Book, drop the reply, retry</button>
+      <ol id="lostOut" hidden></ol>
+    </div>
+  </div>
+
+  <footer>
+    <span>Your bookings live in a private sandbox that other visitors cannot see.</span>
+    <button id="reset">Start a fresh sandbox</button>
+  </footer>
+</main>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  };
+  const rnd = () => (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now());
+  const newSandbox = () => 'sb-' + rnd().replace(/-/g, '').slice(0, 20);
+  let sandbox = store.get('booking-sandbox');
+  if (!sandbox || !/^[a-z0-9-]{8,40}$/.test(sandbox)) { sandbox = newSandbox(); store.set('booking-sandbox', sandbox); }
+
+  const TZ = 'Australia/Sydney';
+  const state = { duration: 45, date: null, slot: null, prices: { 30: 4500, 45: 6000, 60: 7500 }, busy: false };
+  const money = (c) => 'AUD ' + (c / 100).toFixed(2);
+  const sydDate = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  const hhmm = (label) => label.slice(-5);
+
+  async function call(path, opts = {}) {
+    const res = await fetch(path, { ...opts, headers: { 'content-type': 'application/json' } });
+    let body = null; try { body = await res.json(); } catch {}
+    return { status: res.status, body };
+  }
+  function say(text, kind) { const m = $('msg'); m.textContent = text; m.className = 'msg' + (kind ? ' ' + kind : ''); }
+
+  async function loadHealth() {
+    const r = await call('api/health').catch(() => null);
+    const el = $('deploy');
+    if (!r || r.status !== 200) { el.textContent = 'Release information unavailable.'; return; }
+    const h = r.body;
+    el.innerHTML = '';
+    const tag = document.createElement('b'); tag.textContent = h.env; if (h.env === 'production') tag.className = 'prod';
+    const s = document.createElement('span'); s.textContent = 'release ' + String(h.sha).slice(0, 7) + (h.deployedAt ? ', deployed ' + h.deployedAt.replace('T', ' ').slice(0, 16) + ' UTC' : '');
+    el.append(tag, s);
+  }
+
+  function renderDurations() {
+    const box = $('durations'); box.innerHTML = '';
+    for (const d of [30, 45, 60]) {
+      const b = document.createElement('button'); b.className = 'chip'; b.type = 'button';
+      b.setAttribute('aria-pressed', String(d === state.duration));
+      b.innerHTML = `${d} min<small>${money(state.prices[d])}</small>`;
+      b.onclick = () => { state.duration = d; state.slot = null; renderDurations(); loadSlots(); };
+      box.append(b);
+    }
+  }
+
+  function renderDates() {
+    const box = $('dates'); box.innerHTML = '';
+    const now = Date.now();
+    for (let i = 0; i < 21; i++) {
+      const d = new Date(now + i * 86400000); const iso = sydDate(d);
+      if (box.querySelector(`[data-d="${iso}"]`)) continue;
+      const b = document.createElement('button'); b.className = 'date'; b.type = 'button'; b.dataset.d = iso;
+      const wd = new Intl.DateTimeFormat('en-AU', { timeZone: TZ, weekday: 'short' }).format(d);
+      const dm = new Intl.DateTimeFormat('en-AU', { timeZone: TZ, day: 'numeric' }).format(d);
+      const mo = new Intl.DateTimeFormat('en-AU', { timeZone: TZ, month: 'short' }).format(d);
+      b.innerHTML = `<span class="dw">${wd}</span><span class="dd">${dm}</span><span class="dw">${mo}</span>`;
+      b.setAttribute('aria-label', `${wd} ${dm} ${mo}`);
+      b.setAttribute('aria-pressed', String(iso === state.date));
+      b.onclick = () => { state.date = iso; state.slot = null; renderDates(); loadSlots(); };
+      box.append(b);
+    }
+  }
+
+  async function loadSlots() {
+    const box = $('slots'); const empty = $('slotsEmpty');
+    box.innerHTML = ''; empty.hidden = true; updateSummary();
+    if (!state.date) return;
+    const r = await call(`api/slots?sandbox=${sandbox}&date=${state.date}&durationMin=${state.duration}`);
+    if (r.status !== 200) { empty.hidden = false; empty.textContent = 'Times could not be loaded. Reload the page to try again.'; return; }
+    const slots = r.body.slots.filter((s) => s.reason !== 'out_of_range');
+    if (!slots.length) { empty.hidden = false; empty.textContent = 'The teacher has no sessions that day. Pick another day.'; return; }
+    for (const s of slots) {
+      const b = document.createElement('button'); b.className = 'slot'; b.type = 'button';
+      b.innerHTML = `<span class="t">${hhmm(s.learner)}</span><span class="p">${hhmm(s.teacher)} in Paris${s.free ? '' : ', taken'}</span>`;
+      b.disabled = !s.free;
+      b.setAttribute('aria-pressed', String(state.slot && state.slot.start === s.start));
+      b.onclick = () => { state.slot = s; loadSlotsPressed(); updateSummary(); };
+      b.dataset.start = s.start;
+      box.append(b);
+    }
+  }
+  function loadSlotsPressed() { for (const b of $('slots').children) b.setAttribute('aria-pressed', String(state.slot && b.dataset.start === state.slot.start)); }
+
+  function updateSummary() {
+    const s = state.slot;
+    $('book').disabled = !s || state.busy;
+    $('summary').textContent = s
+      ? `${state.duration} min, ${s.learner} in Sydney (${hhmm(s.teacher)} in Paris). ${money(state.prices[state.duration])}, simulated.`
+      : 'Pick a start time.';
+  }
+
+  async function book(start, durationMin, key = rnd()) {
+    return call('api/bookings', { method: 'POST', body: JSON.stringify({ sandbox, start, durationMin, idempotencyKey: key, learnerTz: TZ }) });
+  }
+
+  $('book').onclick = async () => {
+    if (!state.slot) return;
+    state.busy = true; updateSummary();
+    const r = await book(state.slot.start, state.duration);
+    state.busy = false;
+    if (r.status === 201) say(`Booked: ${r.body.booking.learner.local} in Sydney.`, 'ok');
+    else say(r.body && r.body.message ? `Not booked: ${r.body.message}.` : 'Not booked. Try again.', 'err');
+    state.slot = null; await Promise.all([loadSlots(), loadMine()]);
+  };
+
+  async function loadMine() {
+    const r = await call(`api/bookings?sandbox=${sandbox}`);
+    const ul = $('mine'); ul.innerHTML = '';
+    const list = r.status === 200 ? r.body.bookings : [];
+    $('mineEmpty').hidden = list.length > 0;
+    for (const b of list) {
+      const li = document.createElement('li'); if (b.status === 'cancelled') li.className = 'cancelled';
+      const w = document.createElement('div'); w.className = 'w';
+      w.innerHTML = `<b>${b.learner.local}</b> <span>Sydney, ${b.durationMin} min, ${hhmm(b.teacher.local)} in Paris</span>`;
+      li.append(w);
+      if (b.status === 'confirmed') {
+        const x = document.createElement('button'); x.className = 'x'; x.textContent = 'Cancel';
+        x.onclick = async () => {
+          const c = await call(`api/bookings/${b.id}/cancel`, { method: 'POST', body: JSON.stringify({ sandbox }) });
+          say(c.status === 200 ? 'Session cancelled. The time is free again.' : 'Could not cancel. Try again.', c.status === 200 ? 'ok' : 'err');
+          await Promise.all([loadSlots(), loadMine()]);
+        };
+        li.append(x);
+      } else {
+        const s = document.createElement('span'); s.textContent = 'cancelled'; s.style.color = 'var(--pencil)'; li.append(s);
+      }
+      ul.append(li);
+    }
+  }
+
+  async function findFree(minutes, extraOffsetMin = 0) {
+    for (let i = 1; i < 21; i++) {
+      const date = sydDate(new Date(Date.now() + i * 86400000));
+      const r60 = await call(`api/slots?sandbox=${sandbox}&date=${date}&durationMin=${minutes}`);
+      if (r60.status !== 200) continue;
+      const free = r60.body.slots.filter((s) => s.free).map((s) => s.start);
+      if (!extraOffsetMin) { if (free.length) return [free[0]]; continue; }
+      const r30 = await call(`api/slots?sandbox=${sandbox}&date=${date}&durationMin=30`);
+      const free30 = new Set(r30.body.slots.filter((s) => s.free).map((s) => s.start));
+      for (const s of free) {
+        const second = new Date(Date.parse(s) + extraOffsetMin * 60000).toISOString();
+        if (free30.has(second)) return [s, second];
+      }
+    }
+    return null;
+  }
+  const line = (ol, html) => { const li = document.createElement('li'); li.innerHTML = html; ol.append(li); };
+  const verdict = (r) => r.status === 201 ? `<span class="code c2">201</span> confirmed` : r.status === 200 ? `<span class="code c2">200</span> same booking returned` : `<span class="code c4">${r.status}</span> ${r.body && r.body.error ? r.body.error.replace(/_/g, ' ') : 'refused'}`;
+
+  $('race').onclick = async () => {
+    const out = $('raceOut'); out.hidden = false; out.innerHTML = ''; $('race').disabled = true;
+    try {
+      const pair = await findFree(60, 30);
+      if (!pair) { line(out, 'No free hour left in your sandbox. Start a fresh sandbox below.'); return; }
+      const [a, b] = await Promise.all([book(pair[0], 60), book(pair[1], 30)]);
+      const lbl = (iso) => new Intl.DateTimeFormat('en-AU', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(iso));
+      line(out, `60 min at ${lbl(pair[0])}: ${verdict(a)}`);
+      line(out, `30 min at ${lbl(pair[1])}: ${verdict(b)}`);
+      const both = a.status === 201 && b.status === 201;
+      line(out, both ? '<b>Both were confirmed: the teacher is double-booked.</b> This release has the overlap defect.' : 'Only one was confirmed. The other was refused when it was written, not by this page.');
+    } finally { $('race').disabled = false; await Promise.all([loadSlots(), loadMine()]); }
+  };
+
+  $('lost').onclick = async () => {
+    const out = $('lostOut'); out.hidden = false; out.innerHTML = ''; $('lost').disabled = true;
+    try {
+      const one = await findFree(30);
+      if (!one) { line(out, 'No free time left in your sandbox. Start a fresh sandbox below.'); return; }
+      const key = rnd();
+      const first = await book(one[0], 30, key);
+      line(out, `First attempt: ${verdict(first)}, but the page ignores the reply.`);
+      const retry = await book(one[0], 30, key);
+      line(out, `Retry with the same key: ${verdict(retry)}.`);
+      const same = first.body && retry.body && first.body.booking && retry.body.booking && first.body.booking.id === retry.body.booking.id;
+      const mine = await call(`api/bookings?sandbox=${sandbox}`);
+      const count = mine.body.bookings.filter((b) => b.start === one[0] && b.status === 'confirmed').length;
+      line(out, same ? `Same booking both times; ${count} session stored at that time.` : 'The retry returned a different booking.');
+    } finally { $('lost').disabled = false; await Promise.all([loadSlots(), loadMine()]); }
+  };
+
+  $('reset').onclick = async () => { sandbox = newSandbox(); store.set('booking-sandbox', sandbox); say('Fresh sandbox ready.', 'ok'); $('raceOut').hidden = true; $('lostOut').hidden = true; await Promise.all([loadSlots(), loadMine()]); };
+
+  (async () => {
+    const cfg = await call('api/config').catch(() => null);
+    if (cfg && cfg.status === 200) state.prices = cfg.body.teacher.prices;
+    renderDurations();
+    // first day with availability, starting tomorrow
+    state.date = sydDate(new Date(Date.now() + 86400000));
+    for (let i = 1; i < 8; i++) {
+      const d = sydDate(new Date(Date.now() + i * 86400000));
+      const r = await call(`api/slots?sandbox=${sandbox}&date=${d}&durationMin=${state.duration}`);
+      if (r.status === 200 && r.body.slots.some((s) => s.free)) { state.date = d; break; }
+    }
+    renderDates(); loadHealth(); loadSlots(); loadMine();
+  })();
+})();
+</script>
+</body>
+</html>
