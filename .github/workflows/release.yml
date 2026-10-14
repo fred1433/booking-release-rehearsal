@@ -1,0 +1,93 @@
+# Release path for the booking app.
+# - Every push to main is tested, then deployed to staging (no approval).
+# - Production uses the protected "production" environment: a required reviewer must approve
+#   this exact run. The run is pinned to one commit, so approving it cannot release any other commit.
+# - The Cloudflare token exists only as an environment secret; jobs see it only after the gate opens.
+# - Rollback = run this workflow by hand with an older commit; it goes through the same gate.
+name: release
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", ".github/workflows/release.yml"]
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "Commit to release (full SHA, must already be on main). Empty = the commit this run starts from."
+        required: false
+permissions:
+  contents: read
+concurrency:
+  group: release-production
+  cancel-in-progress: false
+env:
+  WRANGLER: wrangler@4.146.0
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.pick.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: pick
+        run: |
+          SHA="${{ github.event.inputs.commit }}"
+          [ -z "$SHA" ] && SHA="${{ github.sha }}"
+          git cat-file -e "$SHA^{commit}"
+          git merge-base --is-ancestor "$SHA" origin/main || { echo "::error::$SHA is not on main"; exit 1; }
+          echo "sha=$(git rev-parse "$SHA")" >> "$GITHUB_OUTPUT"
+          echo "Release candidate: $(git rev-parse "$SHA")" >> "$GITHUB_STEP_SUMMARY"
+  test:
+    needs: resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ needs.resolve.outputs.sha }}" }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - run: npm test
+        working-directory: app
+  staging:
+    needs: [resolve, test]
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://theaipipe.com/demos/paperclip-booking-rehearsal/staging/
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ needs.resolve.outputs.sha }}" }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - name: Migrate and deploy staging
+        working-directory: app
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx -y $WRANGLER d1 migrations apply DB --env staging --remote
+          npx -y $WRANGLER deploy --env staging --var GIT_SHA:${{ needs.resolve.outputs.sha }} --var DEPLOYED_AT:$(date -u +%Y-%m-%dT%H:%M:%SZ)
+      - name: Smoke test staging
+        run: ./scripts/smoke.sh https://theaipipe.com/demos/paperclip-booking-rehearsal/staging ${{ needs.resolve.outputs.sha }}
+  production:
+    needs: [resolve, staging]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://theaipipe.com/demos/paperclip-booking-rehearsal/app/
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ needs.resolve.outputs.sha }}" }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - name: Confirm the approved run releases the tested commit
+        run: test "$(git rev-parse HEAD)" = "${{ needs.resolve.outputs.sha }}"
+      - name: Migrate and deploy production
+        working-directory: app
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx -y $WRANGLER d1 migrations apply DB --env production --remote
+          npx -y $WRANGLER deploy --env production --var GIT_SHA:${{ needs.resolve.outputs.sha }} --var DEPLOYED_AT:$(date -u +%Y-%m-%dT%H:%M:%SZ)
+      - name: Smoke test production
+        run: ./scripts/smoke.sh https://theaipipe.com/demos/paperclip-booking-rehearsal/app ${{ needs.resolve.outputs.sha }}

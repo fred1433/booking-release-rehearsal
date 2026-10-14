@@ -1,0 +1,6 @@
+node_modules/
+.wrangler/
+.seed/
+evidence/private/
+.env*
+*.log

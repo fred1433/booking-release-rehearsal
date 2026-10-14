@@ -1,0 +1,32 @@
+# The booking app. Deployed only by .github/workflows/release.yml.
+name = "booking-rehearsal-app"
+main = "src/worker.js"
+compatibility_date = "2026-09-01"
+workers_dev = false
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+
+[env.staging]
+name = "booking-rehearsal-staging"
+routes = [
+  { pattern = "theaipipe.com/demos/paperclip-booking-rehearsal/staging", zone_name = "theaipipe.com" },
+  { pattern = "theaipipe.com/demos/paperclip-booking-rehearsal/staging/*", zone_name = "theaipipe.com" }
+]
+vars = { BASE = "/demos/paperclip-booking-rehearsal/staging", ENV_NAME = "staging" }
+d1_databases = [
+  { binding = "DB", database_name = "booking-rehearsal-staging", database_id = "ce33552e-15ea-46ff-86ed-5676ec622b33", migrations_dir = "migrations" }
+]
+
+[env.production]
+name = "booking-rehearsal-production"
+routes = [
+  { pattern = "theaipipe.com/demos/paperclip-booking-rehearsal/app", zone_name = "theaipipe.com" },
+  { pattern = "theaipipe.com/demos/paperclip-booking-rehearsal/app/*", zone_name = "theaipipe.com" }
+]
+vars = { BASE = "/demos/paperclip-booking-rehearsal/app", ENV_NAME = "production" }
+d1_databases = [
+  { binding = "DB", database_name = "booking-rehearsal-production", database_id = "5ebdeb52-8acb-455d-bfa7-bedf12c6314a", migrations_dir = "migrations" }
+]

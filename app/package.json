@@ -1,0 +1,9 @@
+{
+  "name": "booking-rehearsal-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-reporter=spec tests/"
+  },
+  "engines": { "node": ">=24" }
+}
