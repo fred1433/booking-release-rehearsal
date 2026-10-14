@@ -86,6 +86,30 @@ async function findByKey(db, sandbox, key) {
 }
 
 /**
+ * Insert the booking only if no confirmed session of this teacher in this sandbox
+ * overlaps [start, end). Returns the number of rows written: 0 means someone else holds
+ * part of that interval.
+ *
+ * The overlap test lives inside the INSERT on purpose. SQLite, and therefore D1, runs a
+ * single statement in its own transaction while holding the write lock, so no other request
+ * can slip a row in between the test and the write. A separate SELECT could be overtaken,
+ * which is how two sessions of different lengths used to both get confirmed.
+ */
+async function insertIfFree(db, v, { id, now, appSha }) {
+  const res = await db
+    .prepare(`INSERT INTO bookings (id, sandbox, teacher_id, start_utc, end_utc, duration_min, teacher_tz, learner_tz,
+                price_cents, currency, status, idem_key, created_at, app_sha)
+              SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?
+              WHERE NOT EXISTS (SELECT 1 FROM bookings WHERE sandbox = ? AND teacher_id = ?
+                AND status = 'confirmed' AND start_utc < ? AND end_utc > ?)`)
+    .bind(id, v.sandbox, TEACHER.id, v.start, v.end, v.duration, TEACHER.tz, v.learnerTz,
+      TEACHER.prices[v.duration], TEACHER.currency, v.key, now, appSha,
+      v.sandbox, TEACHER.id, v.end, v.start)
+    .run();
+  return res?.meta?.changes ?? 0;
+}
+
+/**
  * Create a booking. Returns { status, booking, replayed }.
  * A retry with the same idempotency key returns the original booking (status 200).
  */
@@ -101,27 +125,25 @@ export async function createBooking(db, req, { now = Date.now(), appSha = 'dev',
   const count = await db.prepare("SELECT COUNT(*) AS n FROM bookings WHERE sandbox = ? AND status = 'confirmed'").bind(v.sandbox).first();
   if (count && count.n >= MAX_BOOKINGS_PER_SANDBOX) throw new BookingError(429, 'sandbox_full', 'this sandbox already holds 40 bookings; reset it');
 
-  const clash = await db
-    .prepare("SELECT id FROM bookings WHERE sandbox = ? AND teacher_id = ? AND status = 'confirmed' AND start_utc = ?")
-    .bind(v.sandbox, TEACHER.id, v.start)
-    .first();
-  if (clash) throw new BookingError(409, 'slot_taken', 'the teacher already has a session at that time');
-
   const id = newId();
+  let written;
   try {
-    await db
-      .prepare(`INSERT INTO bookings (id, sandbox, teacher_id, start_utc, end_utc, duration_min, teacher_tz, learner_tz,
-                price_cents, currency, status, idem_key, created_at, app_sha)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?)`)
-      .bind(id, v.sandbox, TEACHER.id, v.start, v.end, v.duration, TEACHER.tz, v.learnerTz,
-        TEACHER.prices[v.duration], TEACHER.currency, v.key, now, appSha)
-      .run();
+    written = await insertIfFree(db, v, { id, now, appSha });
   } catch (e) {
+    // A concurrent retry with the same key beat us to it, at a start that does not overlap ours.
     if (/UNIQUE constraint failed/i.test(String(e && e.message))) {
       const row = await findByKey(db, v.sandbox, v.key);
       if (row && sameRequest(row, v)) return { status: 200, booking: present(row), replayed: true };
+      if (row) throw new BookingError(422, 'idempotency_key_reused', 'this idempotency key was used for a different booking');
     }
     throw e;
+  }
+  if (written === 0) {
+    // The interval is taken. If it is taken by a concurrent retry of this very request,
+    // the retry has to see the original booking rather than a conflict.
+    const row = await findByKey(db, v.sandbox, v.key);
+    if (row && sameRequest(row, v)) return { status: 200, booking: present(row), replayed: true };
+    throw new BookingError(409, 'slot_taken', 'the teacher already has a session at that time');
   }
   const row = await db.prepare('SELECT * FROM bookings WHERE id = ?').bind(id).first();
   return { status: 201, booking: present(row), replayed: false };
