@@ -1,0 +1,25 @@
+{
+  "note": "Claude subscription usage for the account the agents used (account identity withheld). Utilisation is a percentage of the plan window and is shared with any other use of the account in the same window.",
+  "before": {
+    "checkedAt": "2026-10-14T13:29:52Z",
+    "extraUsageEnabled": false,
+    "fiveHour": 12.0,
+    "sevenDay": 29.0,
+    "extraUsage": {
+      "is_enabled": false,
+      "used_credits": null,
+      "credits_ever_enabled": false
+    }
+  },
+  "after": {
+    "checkedAt": "2026-10-14T14:05:31Z",
+    "extraUsageEnabled": false,
+    "fiveHour": 15.0,
+    "sevenDay": 30.0,
+    "extraUsage": {
+      "is_enabled": false,
+      "used_credits": null,
+      "credits_ever_enabled": false
+    }
+  }
+}

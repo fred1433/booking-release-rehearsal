@@ -1,0 +1,124 @@
+{
+  "bookings": [
+    {
+      "id": "9dbe820d-084f-4326-a285-4f31ee68cf2a",
+      "status": "confirmed",
+      "start": "2026-10-20T05:00:00.000Z",
+      "end": "2026-10-20T06:00:00.000Z",
+      "durationMin": 60,
+      "teacher": {
+        "id": "teacher-synthetic-1",
+        "tz": "Europe/Paris",
+        "local": "Tue, 20 Oct, 07:00"
+      },
+      "learner": {
+        "tz": "Australia/Sydney",
+        "local": "Tue, 20 Oct, 16:00"
+      },
+      "price": {
+        "amountCents": 7500,
+        "currency": "AUD",
+        "simulated": true
+      },
+      "createdAt": "2026-10-14T13:49:41.152Z",
+      "cancelledAt": null,
+      "appSha": "37d56fd159caf8528350a786e6d0c57a7f81bdc5"
+    },
+    {
+      "id": "a80bbe1f-f8c9-4b71-899b-3c80898ef57c",
+      "status": "confirmed",
+      "start": "2026-10-21T05:00:00.000Z",
+      "end": "2026-10-21T06:00:00.000Z",
+      "durationMin": 60,
+      "teacher": {
+        "id": "teacher-synthetic-1",
+        "tz": "Europe/Paris",
+        "local": "Wed, 21 Oct, 07:00"
+      },
+      "learner": {
+        "tz": "Australia/Sydney",
+        "local": "Wed, 21 Oct, 16:00"
+      },
+      "price": {
+        "amountCents": 7500,
+        "currency": "AUD",
+        "simulated": true
+      },
+      "createdAt": "2026-10-14T13:49:42.436Z",
+      "cancelledAt": null,
+      "appSha": "37d56fd159caf8528350a786e6d0c57a7f81bdc5"
+    },
+    {
+      "id": "44c92618-ad44-47a0-a356-40099e0f6904",
+      "status": "confirmed",
+      "start": "2026-10-22T05:00:00.000Z",
+      "end": "2026-10-22T05:45:00.000Z",
+      "durationMin": 45,
+      "teacher": {
+        "id": "teacher-synthetic-1",
+        "tz": "Europe/Paris",
+        "local": "Thu, 22 Oct, 07:00"
+      },
+      "learner": {
+        "tz": "Australia/Sydney",
+        "local": "Thu, 22 Oct, 16:00"
+      },
+      "price": {
+        "amountCents": 6000,
+        "currency": "AUD",
+        "simulated": true
+      },
+      "createdAt": "2026-10-14T13:52:42.827Z",
+      "cancelledAt": null,
+      "appSha": "7e4de349e1112cf89b2624f0731951a2a822d773"
+    },
+    {
+      "id": "8f6c2290-5039-4130-b0ea-1de4ded92a23",
+      "status": "confirmed",
+      "start": "2026-10-23T05:00:00.000Z",
+      "end": "2026-10-23T05:30:00.000Z",
+      "durationMin": 30,
+      "teacher": {
+        "id": "teacher-synthetic-1",
+        "tz": "Europe/Paris",
+        "local": "Fri, 23 Oct, 07:00"
+      },
+      "learner": {
+        "tz": "Australia/Sydney",
+        "local": "Fri, 23 Oct, 16:00"
+      },
+      "price": {
+        "amountCents": 4500,
+        "currency": "AUD",
+        "simulated": true
+      },
+      "createdAt": "2026-10-14T13:53:46.899Z",
+      "cancelledAt": null,
+      "appSha": "7e4de349e1112cf89b2624f0731951a2a822d773"
+    },
+    {
+      "id": "f3482cac-b5e9-4d63-b8cb-ebdb94c0cf51",
+      "status": "confirmed",
+      "start": "2026-10-26T06:00:00.000Z",
+      "end": "2026-10-26T06:30:00.000Z",
+      "durationMin": 30,
+      "teacher": {
+        "id": "teacher-synthetic-1",
+        "tz": "Europe/Paris",
+        "local": "Mon, 26 Oct, 07:00"
+      },
+      "learner": {
+        "tz": "Australia/Sydney",
+        "local": "Mon, 26 Oct, 17:00"
+      },
+      "price": {
+        "amountCents": 4500,
+        "currency": "AUD",
+        "simulated": true
+      },
+      "createdAt": "2026-10-14T13:55:58.463Z",
+      "cancelledAt": null,
+      "appSha": "37d56fd159caf8528350a786e6d0c57a7f81bdc5"
+    }
+  ]
+}

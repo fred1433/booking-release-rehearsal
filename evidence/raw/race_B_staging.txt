@@ -1,0 +1,2 @@
+[{"sandbox":"staging-b-mv864x89-0","codes":[409,201,409],"confirmed":1},{"sandbox":"staging-b-mv864y66-1","codes":[409,409,201],"confirmed":1},{"sandbox":"staging-b-mv864z0x-2","codes":[409,201,409],"confirmed":1},{"sandbox":"staging-b-mv864zwj-3","codes":[201,409,409],"confirmed":1},{"sandbox":"staging-b-mv8650wv-4","codes":[409,201,409],"confirmed":1}]
+no double booking in 5 rounds

@@ -1,0 +1,1422 @@
+{
+  "exportedFrom": "Paperclip API (read-only export, not a live Paperclip interface)",
+  "paperclip": {
+    "version": "2026.1012.0",
+    "commit": "bba6a45f0d364cfd962ac59b3bdf2426a8222adb",
+    "deploymentMode": "authenticated"
+  },
+  "company": {
+    "name": "Booking Release Rehearsal",
+    "description": "A small company that ships one booking change at a time: implementer, reviewer, and a human operator who approves.",
+    "issuePrefix": "BOO",
+    "createdAt": "2026-10-14T13:33:46.532Z"
+  },
+  "goals": [
+    {
+      "id": "1696c87f-3f3e-4efd-b95a-3edea6f2ca70",
+      "title": "Private-session bookings never double-book a teacher",
+      "description": "A learner can book a 30, 45 or 60 minute session with a teacher in another time zone; no two confirmed sessions overlap.",
+      "status": "active"
+    }
+  ],
+  "agents": [
+    {
+      "id": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "name": "Reviewer",
+      "role": "qa",
+      "title": "Reviewer",
+      "adapterType": "claude_local",
+      "adapterConfig": {
+        "engine": "cli",
+        "model": null,
+        "dangerouslySkipPermissions": true,
+        "maxTurnsPerRun": 120,
+        "timeoutSec": 2400,
+        "cwd": "/work/booking"
+      },
+      "budgetMonthlyCents": 3000,
+      "spentMonthlyCents": 0
+    },
+    {
+      "id": "8513178a-52d4-4d32-87f5-f913863dd594",
+      "name": "Implementer",
+      "role": "engineer",
+      "title": "Implementer",
+      "adapterType": "claude_local",
+      "adapterConfig": {
+        "engine": "cli",
+        "model": null,
+        "dangerouslySkipPermissions": true,
+        "maxTurnsPerRun": 120,
+        "timeoutSec": 2400,
+        "cwd": "/work/booking"
+      },
+      "budgetMonthlyCents": 3000,
+      "spentMonthlyCents": 0
+    }
+  ],
+  "issues": [
+    {
+      "id": "64433a31-76c4-4d69-b637-92db2976b098",
+      "identifier": "BOO-1",
+      "title": "Stop overlapping bookings of different lengths, at the write",
+      "description": "## Context\n- Repository: `/work/booking` (git). Work on branch `fix/overlap`. Base: `main` at `1d8db4b`.\n- App: `app/` is a Cloudflare Worker with a D1 database (D1 is SQLite). Booking logic lives in `app/src/booking.js` (`createBooking`). Schema: `app/migrations/0001_init.sql`.\n- Commit `259df74` on this branch adds `app/tests/overlap.test.js`, which fails today. This is a seeded exercise: the defect was planted on purpose for this rehearsal, and the test was written before any fix.\n\n## Problem\n`createBooking` only refuses a booking that starts at exactly the same instant as a confirmed one, and it reads before it writes. So sessions of different lengths can overlap (60 min at 08:00 and 30 min at 08:30), and two simultaneous requests can both pass the read.\n\n## Acceptance criteria\n1. Overlapping confirmed sessions for the same teacher in the same sandbox are impossible, for any mix of 30, 45 and 60 minutes. Adjacent sessions (one ends when the next starts) stay allowed.\n2. The guarantee holds at the database write, not only in an earlier read: concurrent requests confirm at most one. D1 is SQLite, so there are no exclusion constraints. Any schema change must stay backwards compatible: the previous release must still run against the new schema, because a rollback is part of this release.\n3. A retry with the same idempotency key still returns the original booking (HTTP 200), also under concurrency.\n4. Cancelled sessions never block a new booking.\n5. `cd app && npm test` passes. Do not weaken or delete existing tests.\n\n## Constraints\n- Do not push and do not deploy. Commit on `fix/overlap` only.\n- Keep the change small. No new dependencies.\n\n## Next action\nImplementer: make the change, commit, comment with the SHA and the test summary, then set the issue to done (it goes to review, then to the operator for approval).",
+      "status": "done",
+      "priority": "high",
+      "createdAt": "2026-10-14T13:34:45.158Z",
+      "startedAt": "2026-10-14T13:45:33.358Z",
+      "completedAt": "2026-10-14T13:49:32.616Z",
+      "assigneeAgentId": null,
+      "assigneeUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+      "createdByUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+      "responsibleUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+      "executionPolicy": {
+        "mode": "normal",
+        "stages": [
+          {
+            "id": "3667a191-4948-4a67-9f40-c1ab4ceaa8df",
+            "type": "review",
+            "participants": [
+              {
+                "id": "1b208fb0-e320-4dab-af99-183d8a515497",
+                "type": "agent",
+                "userId": null,
+                "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+              }
+            ],
+            "approvalsNeeded": 1
+          },
+          {
+            "id": "84fcf184-da64-4c02-97b0-c28b53830565",
+            "type": "approval",
+            "participants": [
+              {
+                "id": "9f1148eb-4c48-4379-921f-983d1c781fc1",
+                "type": "user",
+                "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                "agentId": null
+              }
+            ],
+            "approvalsNeeded": 1
+          }
+        ],
+        "commentRequired": true,
+        "maxReviewRounds": 2
+      },
+      "executionState": {
+        "status": "completed",
+        "monitor": null,
+        "reviewRequest": null,
+        "currentStageId": null,
+        "lastDecisionId": "82affd1c-094a-4a26-ac47-b05a0bb81f74",
+        "returnAssignee": {
+          "type": "agent",
+          "userId": null,
+          "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+        },
+        "currentStageType": null,
+        "completedStageIds": [
+          "3667a191-4948-4a67-9f40-c1ab4ceaa8df",
+          "84fcf184-da64-4c02-97b0-c28b53830565"
+        ],
+        "currentStageIndex": null,
+        "currentParticipant": null,
+        "lastDecisionOutcome": "approved",
+        "changesRequestedCount": 0
+      },
+      "comments": [
+        {
+          "id": "ec51086e-2c27-4771-9c3b-665c5873b35f",
+          "createdAt": "2026-10-14T13:37:53.200Z",
+          "authorAgentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "authorUserId": null,
+          "body": "## Done \u2014 overlap is now refused by the INSERT itself\n\nCommit: `13e6509` (`13e650970474c7b98270d233efee21b9288a3db2`) on `fix/overlap`. Not pushed, not deployed.\n\n**What changed** \u2014 `app/src/booking.js` only. The pre-write `start_utc = ?` SELECT is gone; `createBooking` now writes through one conditional statement:\n\n```sql\nINSERT INTO bookings (...) SELECT ?, ?, ...\nWHERE NOT EXISTS (SELECT 1 FROM bookings WHERE sandbox = ? AND teacher_id = ?\n  AND status = 'confirmed' AND start_utc < ? AND end_utc > ?)\n```\n\n**Why this shape**\n\n- `start_utc < newEnd AND end_utc > newStart` is the half-open interval test, so any mix of 30/45/60 conflicts when it really overlaps and adjacent sessions (one ends as the next starts) still fit.\n- The test sits *inside* the write. SQLite, and so D1, runs a single statement in its own transaction holding the write lock, so nothing can slip a row in between the test and the insert \u2014 that gap is exactly what let two concurrent requests both confirm. `meta.changes === 0` means the interval was taken.\n- On `0` rows written I look up the idempotency key first: a concurrent retry of the same request gets its original booking back with **200**, anything else gets **409 slot_taken**. The `UNIQUE (sandbox, idem_key)` catch now also maps a reused key to **422** instead of leaking a raw constraint error.\n- `status = 'confirmed'` in the guard, so cancelled sessions never block.\n- **No schema change at all**, which makes the rollback requirement trivial: the previous release runs against an untouched `0001_init.sql`. No new dependencies; net +35/\u221213 lines in one file.\n\n**Tests** \u2014 `cd app && npm test`: **22 pass, 0 fail** (80 ms). The five `overlap.test.js` tests that failed on the baseline now pass; the 17 pre-existing tests are untouched and still green. Baseline before the change was 17 pass / 5 fail.\n\nBeyond the suite I ran a throwaway sweep (outside the repo, not committed) to check the invariant rather than just the examples:\n\n- all 81 sequential combinations of (60/45/30) \u00d7 (60/45/30) \u00d7 offsets \u221260\u2026+60 min \u2014 conflict exactly when the intervals overlap, no false 409s on adjacent starts;\n- 200 rounds of 12 mutually overlapping concurrent requests \u2014 never two confirmed bookings that overlap, every loser a clean 409, confirmed count always equal to the number of fulfilled calls;\n- 200 rounds of 8 concurrent requests sharing one idempotency key \u2014 always exactly one row and one booking id, zero rejections;\n- cancel-then-rebook-overlapping, repeated. All clean.\n\n**Worth a reviewer's eye**\n\n- I deliberately chose the conditional INSERT over the alternative (a `booking_slots` table with `UNIQUE (sandbox, teacher_id, slot)` filled in the same `db.batch` transaction). The slot table would make the invariant a hard DB constraint that even buggy code cannot violate, but it needs a migration, cancel-path slot cleanup, and it interacts awkwardly with the rollback requirement \u2014 the previous release would write bookings without slot rows, so the constraint would protect nothing after a rollback anyway. The conditional INSERT satisfies criterion 2 with no schema change. Happy to switch if you want the constraint to be structural.\n- The guarantee relies on D1 running one statement atomically with `meta.changes` reported accurately. If `meta.changes` were ever absent, my `?? 0` fallback degrades to the idempotency lookup, which returns the booking that was just written as a 200 replay \u2014 a wrong status code in that hypothetical, never a lost or duplicated booking.\n- The existing index `(sandbox, teacher_id, status, start_utc)` serves the new range predicate; I did not add one.\n"
+        },
+        {
+          "id": "1fbbaa16-99fd-4d51-b690-7c4a6e1025e0",
+          "createdAt": "2026-10-14T13:46:10.975Z",
+          "authorAgentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "authorUserId": null,
+          "body": "## Approved \u2014 every criterion met, verified independently\n\nReviewed `1d8db4b..13e6509` on `fix/overlap`. Diff is two files: `app/src/booking.js` (+35/\u221213) and the new `app/tests/overlap.test.js`. I confirmed `app/migrations/0001_init.sql`, `app/src/worker.js`, `app/src/time.js`, the three pre-existing test files, `app/tests/helpers.js`, `app/tests/d1-sqlite.js`, `app/package.json`, `app/wrangler.toml`, `scripts/` and `.github/workflows/` are byte-for-byte untouched, and the working tree is clean. Nothing unrelated changed; no existing test was weakened or deleted.\n\n### Evidence per criterion\n\n**1. No overlap for any mix of 30/45/60; adjacent still allowed.**\n`app/src/booking.js:103-104` uses the half-open predicate `start_utc < :newEnd AND end_utc > :newStart`. I did not take the five seeded cases as proof \u2014 I ran my own exhaustive sequential sweep of all 81 combinations (60/45/60 \u00d7 30/45/60 \u00d7 offsets \u221260\u2026+60 at 15-min steps, the full availability window): the create call was refused with 409 in exactly the cases where the intervals truly intersect, accepted in every other, and no pair of confirmed rows ever overlapped. Adjacency (`end == start`) is accepted, matching the pre-existing `adjacent sessions do not conflict (end is exclusive)` test, which still passes.\n\n**2. The guarantee is at the write, and the rollback is safe.**\nThe pre-write `start_utc = ?` SELECT is gone (removed at the old `createBooking` clash block); the only gate is now inside the statement that writes \u2014 `INSERT \u2026 SELECT ? \u2026 WHERE NOT EXISTS (\u2026)` in `insertIfFree` (`app/src/booking.js:98-110`), with `meta.changes === 0` as the \"interval taken\" signal. One SQLite statement runs in its own implicit transaction under the write lock, so there is no read-then-write window left to lose. 300 rounds of 12 mutually overlapping concurrent `createBooking` calls on the real `node:sqlite`-backed D1 stand-in: zero overlapping confirmed rows, every loser a clean `409 slot_taken` (no raw SQL errors leaking), and the confirmed-row count equal to the fulfilled-call count every round \u2014 so the winner is never lost either.\nSchema diff is empty. `0001_init.sql` is unchanged, which is strictly stronger than backwards compatible: the previous release runs against the identical schema, so the rollback in this release carries no migration risk. The existing index `(sandbox, teacher_id, status, start_utc)` already covers the new range predicate.\n\n**3. Idempotent retry returns the original, also under concurrency.**\nTwo paths are covered and both are reachable. Same-key retry at the *same* interval: the second insert writes 0 rows (its own row now blocks it), falls to `findByKey` + `sameRequest` at `app/src/booking.js:144-145` and returns 200 replayed. Same-key at a *non-overlapping* interval: the `UNIQUE (sandbox, idem_key)` violation is caught at `:134-137` and mapped to `422 idempotency_key_reused` instead of leaking the constraint error. 300 rounds of 8 concurrent calls sharing one key: always exactly one confirmed row, one booking id, exactly one 201 and seven 200s, zero rejections.\n\n**4. Cancelled sessions never block.**\n`status = 'confirmed'` is in the `NOT EXISTS` guard (`app/src/booking.js:103`). 50 rounds of cancel-then-rebook-overlapping across all three durations: every rebook returned 201 and left exactly one confirmed row. The pre-existing `cancellation frees the slot and is idempotent` test still passes.\n\n**5. Tests.**\n`cd app && npm test` run by me: **22 pass, 0 fail, 0 skipped** (71 ms). The 17 pre-existing tests are all green and unmodified; the 5 new `overlap.test.js` tests cover the reported defect directly.\n\n### One non-blocking note (no change required)\n\nConcurrent same-key misuse where the two requests *overlap* \u2014 key `K` for 08:00/60 racing `K` for 08:30/30 \u2014 returns `409 slot_taken` rather than the `422 idempotency_key_reused` the sequential path gives, because `written === 0` is reached before the UNIQUE violation can fire (`app/src/booking.js:141-146`). I verified this: non-overlapping gives 422, overlapping gives 409. Both are honest about the outcome, exactly one row is written either way, and no criterion covers it. Worth a line of follow-up only if the API contract wants one status for key reuse regardless of timing.\n\nI agree with the implementer's call to skip the `booking_slots` table: a structural constraint that the rolled-back release would not populate protects nothing after the rollback, and criterion 2 is already satisfied at the write without a migration.\n\nMoving to the approval stage for the operator. Still unpushed and undeployed, as the constraints require.\n"
+        },
+        {
+          "id": "84514597-9e66-4bc8-b270-69a6fc49b7ac",
+          "createdAt": "2026-10-14T13:49:32.632Z",
+          "authorAgentId": null,
+          "authorUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "body": "Operator decision: approve 13e6509 for release.\n\nWhat I inspected before deciding:\n- The diff 259df74..13e6509: one file, app/src/booking.js. The pre-write SELECT is gone; the overlap test is inside the INSERT ... SELECT ... WHERE NOT EXISTS, half-open interval, confirmed rows only. No schema change.\n- `npm test` on a fresh checkout of the exported commit: 22 pass, 0 fail.\n- Against a local D1 (wrangler dev, real SQLite): 5 rounds of three overlapping requests (60, 30 and 45 minutes) sent at the same instant, each round in a fresh sandbox: 201/409/409 every time, one confirmed booking per round.\n- Same script against the current staging release (37d56fd, without the fix): 3 of 3 rounds confirmed all three, so the test does detect the defect.\n- The reviewer note on concurrent same-key misuse (409 instead of 422 when the intervals overlap) is accepted as is: one row is written either way.\n\nNext: this closes the Paperclip side. Release goes through the separate path: pull request, CI, merge, staging, then the protected production environment, which needs its own approval for this exact commit."
+        }
+      ],
+      "activity": [
+        {
+          "action": "issue.created",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T13:34:45.177Z",
+          "details": {
+            "title": "Stop overlapping bookings of different lengths, at the write",
+            "status": "todo",
+            "identifier": "BOO-1",
+            "statusDefaulted": false,
+            "statusDefaultReason": "explicit",
+            "assignmentWakeSkipped": false,
+            "assignmentWakeSkipReason": null
+          }
+        },
+        {
+          "action": "issue.updated",
+          "actorType": "agent",
+          "actorId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "runId": "c3d6bac5-53ac-4353-8e3c-ba681ee64a3c",
+          "createdAt": "2026-10-14T13:37:53.162Z",
+          "details": {
+            "source": "comment",
+            "status": "in_review",
+            "changes": {
+              "status": {
+                "to": "in_review",
+                "from": "in_progress"
+              },
+              "statusVersion": {
+                "to": 2,
+                "from": 1
+              },
+              "executionState": {
+                "to": {
+                  "status": "pending",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": "3667a191-4948-4a67-9f40-c1ab4ceaa8df",
+                  "lastDecisionId": null,
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": "review",
+                  "completedStageIds": [],
+                  "currentStageIndex": 0,
+                  "currentParticipant": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+                  },
+                  "lastDecisionOutcome": null,
+                  "changesRequestedCount": 0
+                },
+                "from": null
+              },
+              "assigneeAgentId": {
+                "to": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+                "from": "8513178a-52d4-4d32-87f5-f913863dd594"
+              }
+            },
+            "_previous": {
+              "status": "in_progress",
+              "statusVersion": 1,
+              "executionState": null,
+              "assigneeAgentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+            },
+            "identifier": "BOO-1",
+            "assigneeUserId": null,
+            "executionState": {
+              "status": "pending",
+              "monitor": null,
+              "reviewRequest": null,
+              "currentStageId": "3667a191-4948-4a67-9f40-c1ab4ceaa8df",
+              "lastDecisionId": null,
+              "returnAssignee": {
+                "type": "agent",
+                "userId": null,
+                "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+              },
+              "currentStageType": "review",
+              "completedStageIds": [],
+              "currentStageIndex": 0,
+              "currentParticipant": {
+                "type": "agent",
+                "userId": null,
+                "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+              },
+              "lastDecisionOutcome": null,
+              "changesRequestedCount": 0
+            },
+            "assigneeAgentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+            "interruptedRunId": "c3d6bac5-53ac-4353-8e3c-ba681ee64a3c",
+            "authorizationReason": "allow_self"
+          }
+        },
+        {
+          "action": "issue.comment_added",
+          "actorType": "agent",
+          "actorId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "runId": "c3d6bac5-53ac-4353-8e3c-ba681ee64a3c",
+          "createdAt": "2026-10-14T13:37:53.217Z",
+          "details": {
+            "updated": true,
+            "commentId": "ec51086e-2c27-4771-9c3b-665c5873b35f",
+            "identifier": "BOO-1",
+            "issueTitle": "Stop overlapping bookings of different lengths, at the write",
+            "bodySnippet": "## Done \u2014 overlap is now refused by the INSERT itself\n\nCommit: `13e6509` (`13e650970474c7b98270d233efee21b9288a3db2`) on",
+            "interruptedRunId": "c3d6bac5-53ac-4353-8e3c-ba681ee64a3c",
+            "authorizationReason": "allow_self"
+          }
+        },
+        {
+          "action": "issue.checked_out",
+          "actorType": "agent",
+          "actorId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "runId": "ac2e58b4-26bd-4fd6-93f4-eabde717f4fc",
+          "createdAt": "2026-10-14T13:45:33.366Z",
+          "details": {
+            "status": "in_progress",
+            "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+            "_previous": {
+              "status": "in_review"
+            }
+          }
+        },
+        {
+          "action": "issue.updated",
+          "actorType": "agent",
+          "actorId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "runId": "ac2e58b4-26bd-4fd6-93f4-eabde717f4fc",
+          "createdAt": "2026-10-14T13:46:10.914Z",
+          "details": {
+            "source": "comment",
+            "status": "in_review",
+            "changes": {
+              "status": {
+                "to": "in_review",
+                "from": "in_progress"
+              },
+              "statusVersion": {
+                "to": 4,
+                "from": 3
+              },
+              "assigneeUserId": {
+                "to": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                "from": null
+              },
+              "executionState": {
+                "to": {
+                  "status": "pending",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": "84fcf184-da64-4c02-97b0-c28b53830565",
+                  "lastDecisionId": "2d116f42-c87a-468b-83be-357bc211a87e",
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": "approval",
+                  "completedStageIds": [
+                    "3667a191-4948-4a67-9f40-c1ab4ceaa8df"
+                  ],
+                  "currentStageIndex": 1,
+                  "currentParticipant": {
+                    "type": "user",
+                    "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                    "agentId": null
+                  },
+                  "lastDecisionOutcome": "approved",
+                  "changesRequestedCount": 0
+                },
+                "from": {
+                  "status": "pending",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": "3667a191-4948-4a67-9f40-c1ab4ceaa8df",
+                  "lastDecisionId": null,
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": "review",
+                  "completedStageIds": [],
+                  "currentStageIndex": 0,
+                  "currentParticipant": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+                  },
+                  "lastDecisionOutcome": null,
+                  "changesRequestedCount": 0
+                }
+              },
+              "assigneeAgentId": {
+                "to": null,
+                "from": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+              }
+            },
+            "_previous": {
+              "status": "in_progress",
+              "statusVersion": 3,
+              "assigneeUserId": null,
+              "executionState": {
+                "status": "pending",
+                "monitor": null,
+                "reviewRequest": null,
+                "currentStageId": "3667a191-4948-4a67-9f40-c1ab4ceaa8df",
+                "lastDecisionId": null,
+                "returnAssignee": {
+                  "type": "agent",
+                  "userId": null,
+                  "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                },
+                "currentStageType": "review",
+                "completedStageIds": [],
+                "currentStageIndex": 0,
+                "currentParticipant": {
+                  "type": "agent",
+                  "userId": null,
+                  "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+                },
+                "lastDecisionOutcome": null,
+                "changesRequestedCount": 0
+              },
+              "assigneeAgentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+            },
+            "identifier": "BOO-1",
+            "assigneeUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+            "executionState": {
+              "status": "pending",
+              "monitor": null,
+              "reviewRequest": null,
+              "currentStageId": "84fcf184-da64-4c02-97b0-c28b53830565",
+              "lastDecisionId": "2d116f42-c87a-468b-83be-357bc211a87e",
+              "returnAssignee": {
+                "type": "agent",
+                "userId": null,
+                "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+              },
+              "currentStageType": "approval",
+              "completedStageIds": [
+                "3667a191-4948-4a67-9f40-c1ab4ceaa8df"
+              ],
+              "currentStageIndex": 1,
+              "currentParticipant": {
+                "type": "user",
+                "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                "agentId": null
+              },
+              "lastDecisionOutcome": "approved",
+              "changesRequestedCount": 0
+            },
+            "assigneeAgentId": null,
+            "interruptedRunId": "ac2e58b4-26bd-4fd6-93f4-eabde717f4fc",
+            "authorizationReason": "allow_self"
+          }
+        },
+        {
+          "action": "issue.comment_added",
+          "actorType": "agent",
+          "actorId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "runId": "ac2e58b4-26bd-4fd6-93f4-eabde717f4fc",
+          "createdAt": "2026-10-14T13:46:11.004Z",
+          "details": {
+            "updated": true,
+            "commentId": "1fbbaa16-99fd-4d51-b690-7c4a6e1025e0",
+            "identifier": "BOO-1",
+            "issueTitle": "Stop overlapping bookings of different lengths, at the write",
+            "bodySnippet": "## Approved \u2014 every criterion met, verified independently\n\nReviewed `1d8db4b..13e6509` on `fix/overlap`. Diff is two fil",
+            "interruptedRunId": "ac2e58b4-26bd-4fd6-93f4-eabde717f4fc",
+            "authorizationReason": "allow_self"
+          }
+        },
+        {
+          "action": "issue.inbox_archived",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T13:49:32.614Z",
+          "details": {
+            "source": "issue_status_done",
+            "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+            "archivedAt": "2026-10-14T13:49:32.624Z",
+            "targetResolvedFrom": "responsible_user"
+          }
+        },
+        {
+          "action": "issue.updated",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T13:49:32.628Z",
+          "details": {
+            "source": "comment",
+            "status": "done",
+            "changes": {
+              "status": {
+                "to": "done",
+                "from": "in_review"
+              },
+              "completedAt": {
+                "to": "2026-10-14T13:49:32.616Z",
+                "from": null
+              },
+              "statusVersion": {
+                "to": 5,
+                "from": 4
+              },
+              "executionState": {
+                "to": {
+                  "status": "completed",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": null,
+                  "lastDecisionId": "82affd1c-094a-4a26-ac47-b05a0bb81f74",
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": null,
+                  "completedStageIds": [
+                    "3667a191-4948-4a67-9f40-c1ab4ceaa8df",
+                    "84fcf184-da64-4c02-97b0-c28b53830565"
+                  ],
+                  "currentStageIndex": null,
+                  "currentParticipant": null,
+                  "lastDecisionOutcome": "approved",
+                  "changesRequestedCount": 0
+                },
+                "from": {
+                  "status": "pending",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": "84fcf184-da64-4c02-97b0-c28b53830565",
+                  "lastDecisionId": "2d116f42-c87a-468b-83be-357bc211a87e",
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": "approval",
+                  "completedStageIds": [
+                    "3667a191-4948-4a67-9f40-c1ab4ceaa8df"
+                  ],
+                  "currentStageIndex": 1,
+                  "currentParticipant": {
+                    "type": "user",
+                    "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                    "agentId": null
+                  },
+                  "lastDecisionOutcome": "approved",
+                  "changesRequestedCount": 0
+                }
+              }
+            },
+            "_previous": {
+              "status": "in_review",
+              "completedAt": null,
+              "statusVersion": 4,
+              "executionState": {
+                "status": "pending",
+                "monitor": null,
+                "reviewRequest": null,
+                "currentStageId": "84fcf184-da64-4c02-97b0-c28b53830565",
+                "lastDecisionId": "2d116f42-c87a-468b-83be-357bc211a87e",
+                "returnAssignee": {
+                  "type": "agent",
+                  "userId": null,
+                  "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                },
+                "currentStageType": "approval",
+                "completedStageIds": [
+                  "3667a191-4948-4a67-9f40-c1ab4ceaa8df"
+                ],
+                "currentStageIndex": 1,
+                "currentParticipant": {
+                  "type": "user",
+                  "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                  "agentId": null
+                },
+                "lastDecisionOutcome": "approved",
+                "changesRequestedCount": 0
+              }
+            },
+            "identifier": "BOO-1",
+            "executionState": {
+              "status": "completed",
+              "monitor": null,
+              "reviewRequest": null,
+              "currentStageId": null,
+              "lastDecisionId": "82affd1c-094a-4a26-ac47-b05a0bb81f74",
+              "returnAssignee": {
+                "type": "agent",
+                "userId": null,
+                "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+              },
+              "currentStageType": null,
+              "completedStageIds": [
+                "3667a191-4948-4a67-9f40-c1ab4ceaa8df",
+                "84fcf184-da64-4c02-97b0-c28b53830565"
+              ],
+              "currentStageIndex": null,
+              "currentParticipant": null,
+              "lastDecisionOutcome": "approved",
+              "changesRequestedCount": 0
+            },
+            "authorizationReason": "allow_board_actor"
+          }
+        },
+        {
+          "action": "issue.comment_added",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T13:49:32.642Z",
+          "details": {
+            "updated": true,
+            "commentId": "84514597-9e66-4bc8-b270-69a6fc49b7ac",
+            "identifier": "BOO-1",
+            "issueTitle": "Stop overlapping bookings of different lengths, at the write",
+            "bodySnippet": "Operator decision: approve 13e6509 for release.\n\nWhat I inspected before deciding:\n- The diff 259df74..13e6509: one file",
+            "authorizationReason": "allow_board_actor"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a249ea3e-1d85-480f-801e-a6488373a535",
+      "identifier": "BOO-2",
+      "title": "Pin the slot list around the Paris clock change (25 Oct 2026)",
+      "description": "## Context\n- Repository: `/work/booking` (git). Create branch `test/clock-change` from `fix/overlap` (HEAD `13e6509`, which was approved in BOO-1).\n- Slot listing lives in `app/src/booking.js` (`listSlots`); time helpers in `app/src/time.js`; existing time tests in `app/tests/time.test.js`.\n\n## Problem\nParis leaves summer time on Sunday 25 October 2026 while Sydney stays on summer time. The gap between the teacher (Paris) and the learner (Sydney) changes from 9 to 10 hours. There is one test for this today; the slot list for a whole day on each side of the change is not pinned.\n\n## Acceptance criteria\n1. New tests show, for a 45-minute session, the full list of start times on Saturday 24 October and on Monday 26 October 2026 (Sydney dates), with both the Sydney and the Paris time of each slot.\n2. A booking made for the first slot of Monday 26 October is stored as the correct UTC instant.\n3. `cd app && npm test` passes. Only test files change.\n\n## Constraints\n- Do not push or deploy. Commit on `test/clock-change` only. No new dependencies.\n\n## Next action\nImplementer: write the tests, run them, commit, comment with the SHA and the test summary, then set the issue to done.",
+      "status": "done",
+      "priority": "medium",
+      "createdAt": "2026-10-14T13:58:21.440Z",
+      "startedAt": "2026-10-14T14:04:35.447Z",
+      "completedAt": "2026-10-14T14:05:18.839Z",
+      "assigneeAgentId": null,
+      "assigneeUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+      "createdByUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+      "responsibleUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+      "executionPolicy": {
+        "mode": "normal",
+        "stages": [
+          {
+            "id": "7fc95e88-8e13-455b-a07a-d7f4ddcef2f1",
+            "type": "review",
+            "participants": [
+              {
+                "id": "a14c7ca4-b227-44c6-8040-c09f8f3acefb",
+                "type": "agent",
+                "userId": null,
+                "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+              }
+            ],
+            "approvalsNeeded": 1
+          },
+          {
+            "id": "e2acc1cc-355b-49fc-aab1-a8a22939a0e9",
+            "type": "approval",
+            "participants": [
+              {
+                "id": "bc6001b9-1d39-421d-aab5-e844340897db",
+                "type": "user",
+                "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                "agentId": null
+              }
+            ],
+            "approvalsNeeded": 1
+          }
+        ],
+        "commentRequired": true,
+        "maxReviewRounds": 2
+      },
+      "executionState": {
+        "status": "completed",
+        "monitor": null,
+        "reviewRequest": null,
+        "currentStageId": null,
+        "lastDecisionId": "fee9395a-f778-4d00-9dc4-ef3a749c4666",
+        "returnAssignee": {
+          "type": "agent",
+          "userId": null,
+          "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+        },
+        "currentStageType": null,
+        "completedStageIds": [
+          "7fc95e88-8e13-455b-a07a-d7f4ddcef2f1",
+          "e2acc1cc-355b-49fc-aab1-a8a22939a0e9"
+        ],
+        "currentStageIndex": null,
+        "currentParticipant": null,
+        "lastDecisionOutcome": "approved",
+        "changesRequestedCount": 0
+      },
+      "comments": [
+        {
+          "id": "d7d73d51-6c1f-46b9-b473-9041efcb4051",
+          "createdAt": "2026-10-14T14:01:41.922Z",
+          "authorAgentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "authorUserId": null,
+          "body": "## Done\n\nAdded `app/tests/clock-change.test.js`, pinning the 45-minute slot list on each side of the Paris clock change (Sun 25 Oct 2026). Paris leaves summer time while Sydney stays on it, so the teacher/learner gap grows from 9 to 10 hours. Only one test covered this before; a whole day's slot list on either side was unpinned.\n\n**What the tests assert**\n\n- The full Saturday 24 Oct 2026 list (Sydney date) as `[UTC instant, Sydney wall clock, Paris wall clock]` \u2014 7 starts, 05:00Z\u201308:00Z, Paris 07:00\u201310:00, Sydney 16:00\u201319:00.\n- The full Monday 26 Oct 2026 list \u2014 same 7 starts in Paris terms, but 06:00Z\u201309:00Z and Sydney 17:00\u201320:00.\n- The Paris day keeps its shape across the change while every Sydney start moves exactly one hour later, so a regression shows up as a list diff rather than one changed field.\n- Booking the first slot of Mon 26 Oct stores `2026-10-26T06:00:00.000Z` / end `06:45:00.000Z` \u2014 the post-change instant, not the `05:00Z` summer time would give. Checked on the presented booking *and* by reading `start_utc`/`end_utc` off the stored row, so this pins the instant rather than a wall-clock string.\n- Offsets are asserted directly: Paris 120 \u2192 60 min, Sydney 660 both days.\n\n**One thing worth flagging for review**\n\nThe interrupted earlier run had left this file expecting only the first slot of Mon 26 Oct to be taken after booking it. That expectation was wrong and it was the single failing test. Starts are 30 minutes apart but the session runs 45, so a booking at 07:00 Paris also covers the 07:30 start \u2014 both come back `taken`. I verified that against `listSlots` directly and corrected the test to pin the real behaviour (two taken, five free) with a comment saying why. The app was right; no source change was needed.\n\n**Test summary** \u2014 `cd app && npm test`: **26 tests, 26 pass, 0 fail** (~98 ms). Test files only; `git diff --stat fix/overlap` shows no source changes.\n\n- Commit: `2dfd1b3` on `test/clock-change`\n- Not pushed, not deployed."
+        },
+        {
+          "id": "6d216d5e-8ecf-404f-9750-0aa35c809908",
+          "createdAt": "2026-10-14T14:05:00.516Z",
+          "authorAgentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "authorUserId": null,
+          "body": "## Approved\n\nReviewed `2dfd1b3` on `test/clock-change` against `fix/overlap` (`13e6509`). Diff is one new file, `app/tests/clock-change.test.js`, +98 lines \u2014 no source, migration, or config change, so nothing to roll back and no schema risk.\n\n**Evidence per criterion**\n\n1. **Full slot list on both sides, Sydney and Paris times** \u2014 met. Each test pins all 7 starts for a 45-minute session as `[UTC instant, Sydney label, Paris label]`:\n   - Sat 24 Oct (Sydney date): `05:00Z`\u2013`08:00Z`, Paris 07:00\u201310:00 (CEST, +2), Sydney 16:00\u201319:00.\n   - Mon 26 Oct: `06:00Z`\u2013`09:00Z`, Paris 07:00\u201310:00 (CET, +1), Sydney 17:00\u201320:00.\n   I recomputed both lists independently of the app (plain `Intl` in a scratch script) and they match exactly, so the expectations are correct values, not transcribed output. 7 starts is also right: the teacher window is 07:00\u201311:00 Paris with 30-minute steps, and a 10:30 start would end 11:15, past the edge. Offsets are asserted directly (Paris 120 \u2192 60, Sydney 660 both days), which is what makes a tzdata or offset regression fail loudly.\n2. **Booking the first Monday slot stores the correct instant** \u2014 met, and checked at the write, not just the read: the test asserts the presented booking (`2026-10-26T06:00:00.000Z` / `06:45:00.000Z`) **and** then reads `start_utc`/`end_utc` off the stored row via `SELECT \u2026 WHERE id = ?`, comparing to `Date.parse(...)`. `06:00Z` is the post-change instant; summer time would have given `05:00Z`. Validation on that path is real too \u2014 `withinAvailability` re-derives the Paris wall clock from the instant, so a wrong instant would have been rejected rather than silently stored.\n3. **Suite passes, test files only** \u2014 met. I ran `cd app && npm test` myself: **26 tests, 26 pass, 0 fail** (77 ms), including the 10 pre-existing booking/overlap/idempotency/cancellation tests and the 6 time tests. `git diff --stat fix/overlap...test/clock-change` \u2192 `1 file changed, 98 insertions(+)`. Working tree clean; no remote configured, so nothing was pushed, and no deploy.\n\n**On the flagged expectation change**\n\nThe implementer's correction is right, and I verified it against the code rather than the summary. The booking covers `06:00Z`\u2013`06:45Z`; the next start is `06:30Z`\u2013`07:15Z`, and `listSlots` marks a start taken when `b.start_utc < e && b.end_utc > s`, so `06:30Z` overlaps and both come back `taken` while `07:00Z` onward stay free. Two taken / five free is the real behaviour, and the comment in the test explains why \u2014 correct to pin that rather than change the app.\n\n**Other things I checked**\n\n- Concurrency and idempotency are untouched by this change; the single-statement `INSERT \u2026 WHERE NOT EXISTS` guard and the retry/`UNIQUE` replay paths in `createBooking` still pass their existing tests.\n- Each test calls `fresh()` for its own DB and `req()` mints a unique idempotency key, so the new file cannot leak state into or out of the rest of the suite.\n- The tests are non-vacuous: `deepEqual` against fixed 7-element arrays fails on any shift in instant, label, or list length \u2014 an empty or one-hour-off list cannot pass.\n\nOne minor, non-blocking note for later: the assertions depend on the `en-AU` label format (`'Mon, 26 Oct, 17:00'`), so an ICU formatting change in a future Node could break these alongside the existing tests that already use those labels. Not a reason to hold this."
+        },
+        {
+          "id": "5f7951d9-1e92-4c59-92ab-247e1461f652",
+          "createdAt": "2026-10-14T14:05:18.855Z",
+          "authorAgentId": null,
+          "authorUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "body": "Operator decision: approve 2dfd1b3 (tests only).\n\nWhat I inspected:\n- Diff 13e6509..2dfd1b3: one new file, app/tests/clock-change.test.js, no source change.\n- `npm test` on a fresh checkout of the exported commit: 26 pass, 0 fail.\n- The expectation the retried run corrected (a 45-minute booking at 07:00 Paris also blocks the 07:30 start) matches the overlap rule approved in BOO-1.\n\nNot merged into the released branch during this rehearsal, so the production commit stays fixed; it is pushed as its own branch with a pull request."
+        }
+      ],
+      "activity": [
+        {
+          "action": "issue.created",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T13:58:21.454Z",
+          "details": {
+            "title": "Pin the slot list around the Paris clock change (25 Oct 2026)",
+            "status": "todo",
+            "identifier": "BOO-2",
+            "statusDefaulted": false,
+            "statusDefaultReason": "explicit",
+            "addedReferencedIssues": [
+              {
+                "id": "64433a31-76c4-4d69-b637-92db2976b098",
+                "title": "Stop overlapping bookings of different lengths, at the write",
+                "identifier": "BOO-1"
+              }
+            ],
+            "assignmentWakeSkipped": false,
+            "currentReferencedIssues": [
+              {
+                "id": "64433a31-76c4-4d69-b637-92db2976b098",
+                "title": "Stop overlapping bookings of different lengths, at the write",
+                "identifier": "BOO-1"
+              }
+            ],
+            "assignmentWakeSkipReason": null
+          }
+        },
+        {
+          "action": "issue.updated",
+          "actorType": "agent",
+          "actorId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "runId": "5d5fac7d-4a9d-4fb5-83ca-8bb8c1570c56",
+          "createdAt": "2026-10-14T14:01:41.886Z",
+          "details": {
+            "source": "comment",
+            "status": "in_review",
+            "changes": {
+              "status": {
+                "to": "in_review",
+                "from": "in_progress"
+              },
+              "statusVersion": {
+                "to": 2,
+                "from": 1
+              },
+              "executionState": {
+                "to": {
+                  "status": "pending",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": "7fc95e88-8e13-455b-a07a-d7f4ddcef2f1",
+                  "lastDecisionId": null,
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": "review",
+                  "completedStageIds": [],
+                  "currentStageIndex": 0,
+                  "currentParticipant": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+                  },
+                  "lastDecisionOutcome": null,
+                  "changesRequestedCount": 0
+                },
+                "from": null
+              },
+              "assigneeAgentId": {
+                "to": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+                "from": "8513178a-52d4-4d32-87f5-f913863dd594"
+              }
+            },
+            "_previous": {
+              "status": "in_progress",
+              "statusVersion": 1,
+              "executionState": null,
+              "assigneeAgentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+            },
+            "identifier": "BOO-2",
+            "assigneeUserId": null,
+            "executionState": {
+              "status": "pending",
+              "monitor": null,
+              "reviewRequest": null,
+              "currentStageId": "7fc95e88-8e13-455b-a07a-d7f4ddcef2f1",
+              "lastDecisionId": null,
+              "returnAssignee": {
+                "type": "agent",
+                "userId": null,
+                "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+              },
+              "currentStageType": "review",
+              "completedStageIds": [],
+              "currentStageIndex": 0,
+              "currentParticipant": {
+                "type": "agent",
+                "userId": null,
+                "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+              },
+              "lastDecisionOutcome": null,
+              "changesRequestedCount": 0
+            },
+            "assigneeAgentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+            "interruptedRunId": "5d5fac7d-4a9d-4fb5-83ca-8bb8c1570c56",
+            "authorizationReason": "allow_self"
+          }
+        },
+        {
+          "action": "issue.comment_added",
+          "actorType": "agent",
+          "actorId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "runId": "5d5fac7d-4a9d-4fb5-83ca-8bb8c1570c56",
+          "createdAt": "2026-10-14T14:01:41.937Z",
+          "details": {
+            "updated": true,
+            "commentId": "d7d73d51-6c1f-46b9-b473-9041efcb4051",
+            "identifier": "BOO-2",
+            "issueTitle": "Pin the slot list around the Paris clock change (25 Oct 2026)",
+            "bodySnippet": "## Done\n\nAdded `app/tests/clock-change.test.js`, pinning the 45-minute slot list on each side of the Paris clock change ",
+            "interruptedRunId": "5d5fac7d-4a9d-4fb5-83ca-8bb8c1570c56",
+            "authorizationReason": "allow_self",
+            "currentReferencedIssues": [
+              {
+                "id": "64433a31-76c4-4d69-b637-92db2976b098",
+                "title": "Stop overlapping bookings of different lengths, at the write",
+                "identifier": "BOO-1"
+              }
+            ]
+          }
+        },
+        {
+          "action": "issue.checked_out",
+          "actorType": "agent",
+          "actorId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "runId": "afa2240c-e85e-48ba-b32d-8254eacc29eb",
+          "createdAt": "2026-10-14T14:04:35.458Z",
+          "details": {
+            "status": "in_progress",
+            "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+            "_previous": {
+              "status": "in_review"
+            }
+          }
+        },
+        {
+          "action": "issue.updated",
+          "actorType": "agent",
+          "actorId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "runId": "afa2240c-e85e-48ba-b32d-8254eacc29eb",
+          "createdAt": "2026-10-14T14:05:00.488Z",
+          "details": {
+            "source": "comment",
+            "status": "in_review",
+            "changes": {
+              "status": {
+                "to": "in_review",
+                "from": "in_progress"
+              },
+              "statusVersion": {
+                "to": 4,
+                "from": 3
+              },
+              "assigneeUserId": {
+                "to": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                "from": null
+              },
+              "executionState": {
+                "to": {
+                  "status": "pending",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": "e2acc1cc-355b-49fc-aab1-a8a22939a0e9",
+                  "lastDecisionId": "ffb38fc3-a875-42e5-b851-dcc4a8579fa9",
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": "approval",
+                  "completedStageIds": [
+                    "7fc95e88-8e13-455b-a07a-d7f4ddcef2f1"
+                  ],
+                  "currentStageIndex": 1,
+                  "currentParticipant": {
+                    "type": "user",
+                    "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                    "agentId": null
+                  },
+                  "lastDecisionOutcome": "approved",
+                  "changesRequestedCount": 0
+                },
+                "from": {
+                  "status": "pending",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": "7fc95e88-8e13-455b-a07a-d7f4ddcef2f1",
+                  "lastDecisionId": null,
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": "review",
+                  "completedStageIds": [],
+                  "currentStageIndex": 0,
+                  "currentParticipant": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+                  },
+                  "lastDecisionOutcome": null,
+                  "changesRequestedCount": 0
+                }
+              },
+              "assigneeAgentId": {
+                "to": null,
+                "from": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+              }
+            },
+            "_previous": {
+              "status": "in_progress",
+              "statusVersion": 3,
+              "assigneeUserId": null,
+              "executionState": {
+                "status": "pending",
+                "monitor": null,
+                "reviewRequest": null,
+                "currentStageId": "7fc95e88-8e13-455b-a07a-d7f4ddcef2f1",
+                "lastDecisionId": null,
+                "returnAssignee": {
+                  "type": "agent",
+                  "userId": null,
+                  "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                },
+                "currentStageType": "review",
+                "completedStageIds": [],
+                "currentStageIndex": 0,
+                "currentParticipant": {
+                  "type": "agent",
+                  "userId": null,
+                  "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+                },
+                "lastDecisionOutcome": null,
+                "changesRequestedCount": 0
+              },
+              "assigneeAgentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+            },
+            "identifier": "BOO-2",
+            "assigneeUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+            "executionState": {
+              "status": "pending",
+              "monitor": null,
+              "reviewRequest": null,
+              "currentStageId": "e2acc1cc-355b-49fc-aab1-a8a22939a0e9",
+              "lastDecisionId": "ffb38fc3-a875-42e5-b851-dcc4a8579fa9",
+              "returnAssignee": {
+                "type": "agent",
+                "userId": null,
+                "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+              },
+              "currentStageType": "approval",
+              "completedStageIds": [
+                "7fc95e88-8e13-455b-a07a-d7f4ddcef2f1"
+              ],
+              "currentStageIndex": 1,
+              "currentParticipant": {
+                "type": "user",
+                "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                "agentId": null
+              },
+              "lastDecisionOutcome": "approved",
+              "changesRequestedCount": 0
+            },
+            "assigneeAgentId": null,
+            "interruptedRunId": "afa2240c-e85e-48ba-b32d-8254eacc29eb",
+            "authorizationReason": "allow_self"
+          }
+        },
+        {
+          "action": "issue.comment_added",
+          "actorType": "agent",
+          "actorId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "runId": "afa2240c-e85e-48ba-b32d-8254eacc29eb",
+          "createdAt": "2026-10-14T14:05:00.539Z",
+          "details": {
+            "updated": true,
+            "commentId": "6d216d5e-8ecf-404f-9750-0aa35c809908",
+            "identifier": "BOO-2",
+            "issueTitle": "Pin the slot list around the Paris clock change (25 Oct 2026)",
+            "bodySnippet": "## Approved\n\nReviewed `2dfd1b3` on `test/clock-change` against `fix/overlap` (`13e6509`). Diff is one new file, `app/tes",
+            "interruptedRunId": "afa2240c-e85e-48ba-b32d-8254eacc29eb",
+            "authorizationReason": "allow_self",
+            "currentReferencedIssues": [
+              {
+                "id": "64433a31-76c4-4d69-b637-92db2976b098",
+                "title": "Stop overlapping bookings of different lengths, at the write",
+                "identifier": "BOO-1"
+              }
+            ]
+          }
+        },
+        {
+          "action": "issue.inbox_archived",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T14:05:18.837Z",
+          "details": {
+            "source": "issue_status_done",
+            "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+            "archivedAt": "2026-10-14T14:05:18.845Z",
+            "targetResolvedFrom": "responsible_user"
+          }
+        },
+        {
+          "action": "issue.updated",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T14:05:18.849Z",
+          "details": {
+            "source": "comment",
+            "status": "done",
+            "changes": {
+              "status": {
+                "to": "done",
+                "from": "in_review"
+              },
+              "completedAt": {
+                "to": "2026-10-14T14:05:18.839Z",
+                "from": null
+              },
+              "statusVersion": {
+                "to": 5,
+                "from": 4
+              },
+              "executionState": {
+                "to": {
+                  "status": "completed",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": null,
+                  "lastDecisionId": "fee9395a-f778-4d00-9dc4-ef3a749c4666",
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": null,
+                  "completedStageIds": [
+                    "7fc95e88-8e13-455b-a07a-d7f4ddcef2f1",
+                    "e2acc1cc-355b-49fc-aab1-a8a22939a0e9"
+                  ],
+                  "currentStageIndex": null,
+                  "currentParticipant": null,
+                  "lastDecisionOutcome": "approved",
+                  "changesRequestedCount": 0
+                },
+                "from": {
+                  "status": "pending",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": "e2acc1cc-355b-49fc-aab1-a8a22939a0e9",
+                  "lastDecisionId": "ffb38fc3-a875-42e5-b851-dcc4a8579fa9",
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": "approval",
+                  "completedStageIds": [
+                    "7fc95e88-8e13-455b-a07a-d7f4ddcef2f1"
+                  ],
+                  "currentStageIndex": 1,
+                  "currentParticipant": {
+                    "type": "user",
+                    "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                    "agentId": null
+                  },
+                  "lastDecisionOutcome": "approved",
+                  "changesRequestedCount": 0
+                }
+              }
+            },
+            "_previous": {
+              "status": "in_review",
+              "completedAt": null,
+              "statusVersion": 4,
+              "executionState": {
+                "status": "pending",
+                "monitor": null,
+                "reviewRequest": null,
+                "currentStageId": "e2acc1cc-355b-49fc-aab1-a8a22939a0e9",
+                "lastDecisionId": "ffb38fc3-a875-42e5-b851-dcc4a8579fa9",
+                "returnAssignee": {
+                  "type": "agent",
+                  "userId": null,
+                  "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                },
+                "currentStageType": "approval",
+                "completedStageIds": [
+                  "7fc95e88-8e13-455b-a07a-d7f4ddcef2f1"
+                ],
+                "currentStageIndex": 1,
+                "currentParticipant": {
+                  "type": "user",
+                  "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                  "agentId": null
+                },
+                "lastDecisionOutcome": "approved",
+                "changesRequestedCount": 0
+              }
+            },
+            "identifier": "BOO-2",
+            "executionState": {
+              "status": "completed",
+              "monitor": null,
+              "reviewRequest": null,
+              "currentStageId": null,
+              "lastDecisionId": "fee9395a-f778-4d00-9dc4-ef3a749c4666",
+              "returnAssignee": {
+                "type": "agent",
+                "userId": null,
+                "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+              },
+              "currentStageType": null,
+              "completedStageIds": [
+                "7fc95e88-8e13-455b-a07a-d7f4ddcef2f1",
+                "e2acc1cc-355b-49fc-aab1-a8a22939a0e9"
+              ],
+              "currentStageIndex": null,
+              "currentParticipant": null,
+              "lastDecisionOutcome": "approved",
+              "changesRequestedCount": 0
+            },
+            "authorizationReason": "allow_board_actor"
+          }
+        },
+        {
+          "action": "issue.comment_added",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T14:05:18.865Z",
+          "details": {
+            "updated": true,
+            "commentId": "5f7951d9-1e92-4c59-92ab-247e1461f652",
+            "identifier": "BOO-2",
+            "issueTitle": "Pin the slot list around the Paris clock change (25 Oct 2026)",
+            "bodySnippet": "Operator decision: approve 2dfd1b3 (tests only).\n\nWhat I inspected:\n- Diff 13e6509..2dfd1b3: one new file, app/tests/clo",
+            "authorizationReason": "allow_board_actor",
+            "currentReferencedIssues": [
+              {
+                "id": "64433a31-76c4-4d69-b637-92db2976b098",
+                "title": "Stop overlapping bookings of different lengths, at the write",
+                "identifier": "BOO-1"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "id": "c3d6bac5-53ac-4353-8e3c-ba681ee64a3c",
+      "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+      "status": "cancelled",
+      "invocationSource": "assignment",
+      "triggerDetail": "system",
+      "errorCode": "issue_reassigned",
+      "error": "Cancelled before issue reassignment",
+      "exitCode": 143,
+      "signal": null,
+      "createdAt": "2026-10-14T13:34:45.189Z",
+      "startedAt": "2026-10-14T13:34:45.229Z",
+      "finishedAt": "2026-10-14T13:37:53.127Z",
+      "retryOfRunId": null,
+      "scheduledRetryAttempt": 0,
+      "scheduledRetryReason": null,
+      "issueCommentStatus": null,
+      "usageJson": null,
+      "issueId": "64433a31-76c4-4d69-b637-92db2976b098"
+    },
+    {
+      "id": "ac2e58b4-26bd-4fd6-93f4-eabde717f4fc",
+      "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "status": "cancelled",
+      "invocationSource": "assignment",
+      "triggerDetail": "manual",
+      "errorCode": "issue_reassigned",
+      "error": "Cancelled before issue reassignment",
+      "exitCode": 143,
+      "signal": null,
+      "createdAt": "2026-10-14T13:44:05.797Z",
+      "startedAt": "2026-10-14T13:44:05.842Z",
+      "finishedAt": "2026-10-14T13:46:10.868Z",
+      "retryOfRunId": null,
+      "scheduledRetryAttempt": 0,
+      "scheduledRetryReason": null,
+      "issueCommentStatus": null,
+      "usageJson": null,
+      "issueId": "64433a31-76c4-4d69-b637-92db2976b098"
+    },
+    {
+      "id": "4df71ce7-b366-4a2a-822f-8c292534323a",
+      "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+      "status": "failed",
+      "invocationSource": "assignment",
+      "triggerDetail": "system",
+      "errorCode": "adapter_failed",
+      "error": "Failed to parse claude JSON output",
+      "exitCode": null,
+      "signal": "SIGKILL",
+      "createdAt": "2026-10-14T13:58:21.464Z",
+      "startedAt": "2026-10-14T13:58:21.504Z",
+      "finishedAt": "2026-10-14T13:59:21.907Z",
+      "retryOfRunId": null,
+      "scheduledRetryAttempt": 0,
+      "scheduledRetryReason": null,
+      "issueCommentStatus": null,
+      "usageJson": null,
+      "issueId": "a249ea3e-1d85-480f-801e-a6488373a535"
+    },
+    {
+      "id": "5d5fac7d-4a9d-4fb5-83ca-8bb8c1570c56",
+      "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+      "status": "cancelled",
+      "invocationSource": "automation",
+      "triggerDetail": "system",
+      "errorCode": "issue_reassigned",
+      "error": "Cancelled before issue reassignment",
+      "exitCode": 143,
+      "signal": null,
+      "createdAt": "2026-10-14T13:59:21.997Z",
+      "startedAt": "2026-10-14T14:00:03.366Z",
+      "finishedAt": "2026-10-14T14:01:41.859Z",
+      "retryOfRunId": "4df71ce7-b366-4a2a-822f-8c292534323a",
+      "scheduledRetryAttempt": 1,
+      "scheduledRetryReason": "transient_failure",
+      "issueCommentStatus": null,
+      "usageJson": null,
+      "issueId": "a249ea3e-1d85-480f-801e-a6488373a535"
+    },
+    {
+      "id": "afa2240c-e85e-48ba-b32d-8254eacc29eb",
+      "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "status": "cancelled",
+      "invocationSource": "assignment",
+      "triggerDetail": "manual",
+      "errorCode": "issue_reassigned",
+      "error": "Cancelled before issue reassignment",
+      "exitCode": 143,
+      "signal": null,
+      "createdAt": "2026-10-14T14:03:11.999Z",
+      "startedAt": "2026-10-14T14:03:12.035Z",
+      "finishedAt": "2026-10-14T14:05:00.460Z",
+      "retryOfRunId": null,
+      "scheduledRetryAttempt": 0,
+      "scheduledRetryReason": null,
+      "issueCommentStatus": null,
+      "usageJson": null,
+      "issueId": "a249ea3e-1d85-480f-801e-a6488373a535"
+    }
+  ],
+  "wakeupRequests": [
+    {
+      "id": "a4929b21-d830-47f5-966a-0a3b6d5bcb09",
+      "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+      "source": "assignment",
+      "reason": "issue_assigned",
+      "status": "cancelled",
+      "error": "Cancelled before issue reassignment",
+      "runId": "c3d6bac5-53ac-4353-8e3c-ba681ee64a3c",
+      "createdAt": "2026-10-14T13:34:45.189Z"
+    },
+    {
+      "id": "89a620ff-fb82-4a60-813e-e84e694d0d69",
+      "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "source": "assignment",
+      "reason": "execution_reconciliation_required",
+      "status": "skipped",
+      "error": "The previous execution has not released its environment lease. Wait for cleanup before continuing this task.",
+      "runId": null,
+      "createdAt": "2026-10-14T13:37:53.250Z"
+    },
+    {
+      "id": "cc5a5957-3a9e-4ec3-9b94-907b4f45d0d6",
+      "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "source": "assignment",
+      "reason": "execution_review_requested",
+      "status": "cancelled",
+      "error": "Cancelled before issue reassignment",
+      "runId": "ac2e58b4-26bd-4fd6-93f4-eabde717f4fc",
+      "createdAt": "2026-10-14T13:44:05.797Z"
+    },
+    {
+      "id": "cc045c4f-20d0-4e23-801b-9d80094a8948",
+      "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+      "source": "assignment",
+      "reason": "issue_assigned",
+      "status": "cancelled",
+      "error": "Failed to parse claude JSON output",
+      "runId": "4df71ce7-b366-4a2a-822f-8c292534323a",
+      "createdAt": "2026-10-14T13:58:21.464Z"
+    },
+    {
+      "id": "35d1e04c-28b1-4a85-a41a-75accaf2db4e",
+      "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+      "source": "automation",
+      "reason": "transient_failure_retry",
+      "status": "cancelled",
+      "error": "Cancelled before issue reassignment",
+      "runId": "5d5fac7d-4a9d-4fb5-83ca-8bb8c1570c56",
+      "createdAt": "2026-10-14T13:59:21.997Z"
+    },
+    {
+      "id": "5b2d27dc-d595-4d8c-8eec-b0c92340dfd5",
+      "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "source": "assignment",
+      "reason": "execution_reconciliation_required",
+      "status": "skipped",
+      "error": "The previous execution has not released its environment lease. Wait for cleanup before continuing this task.",
+      "runId": null,
+      "createdAt": "2026-10-14T14:01:41.964Z"
+    },
+    {
+      "id": "3fe33cbf-22dc-491f-a1c6-159e5f6c0a12",
+      "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "source": "assignment",
+      "reason": "execution_review_requested",
+      "status": "cancelled",
+      "error": "Cancelled before issue reassignment",
+      "runId": "afa2240c-e85e-48ba-b32d-8254eacc29eb",
+      "createdAt": "2026-10-14T14:03:11.999Z"
+    }
+  ],
+  "executionDecisions": [
+    {
+      "id": "2d116f42-c87a-468b-83be-357bc211a87e",
+      "issueId": "64433a31-76c4-4d69-b637-92db2976b098",
+      "stageType": "review",
+      "actorAgentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "actorUserId": null,
+      "outcome": "approved",
+      "createdAt": "2026-10-14T13:46:10.914Z",
+      "body": "## Approved \u2014 every criterion met, verified independently\n\nReviewed `1d8db4b..13e6509` on `fix/overlap`. Diff is two files: `app/src/booking.js` (+35/\u221213) and the new `app/tests/overlap.test.js`. I confirmed `app/migrations/0001_init.sql`, `app/src/worker.js`, `app/src/time.js`, the three pre-existing test files, `app/tests/helpers.js`, `app/tests/d1-sqlite.js`, `app/package.json`, `app/wrangler.toml`, `scripts/` and `.github/workflows/` are byte-for-byte untouched, and the working tree is clean. Nothing unrelated changed; no existing test was weakened or deleted.\n\n### Evidence per criterion\n\n**1. No overlap for any mix of 30/45/60; adjacent still allowed.**\n`app/src/booking.js:103-104` uses the half-open predicate `start_utc < :newEnd AND end_utc > :newStart`. I did not take the five seeded cases as proof \u2014 I ran my own exhaustive sequential sweep of all 81 combinations (60/45/60 \u00d7 30/45/60 \u00d7 offsets \u221260\u2026+60 at 15-min steps, the full availability window): the create call was refused with 409 in exactly the cases where the intervals truly intersect, accepted in every other, and no pair of confirmed rows ever overlapped. Adjacency (`end == start`) is accepted, matching the pre-existing `adjacent sessions do not conflict (end is exclusive)` test, which still passes.\n\n**2. The guarantee is at the write, and the rollback is safe.**\nThe pre-write `start_utc = ?` SELECT is gone (removed at the old `createBooking` clash block); the only gate is now inside the statement that writes \u2014 `INSERT \u2026 SELECT ? \u2026 WHERE NOT EXISTS (\u2026)` in `insertIfFree` (`app/src/booking.js:98-110`), with `meta.changes === 0` as the \"interval taken\" signal. One SQLite statement runs in its own implicit transaction under the write lock, so there is no read-then-write window left to lose. 300 rounds of 12 mutually overlapping concurrent `createBooking` calls on the real `node:sqlite`-backed D1 stand-in: zero overlapping confirmed rows, every loser a clean `409 slot_taken` (no raw SQL errors leaking), and the confirmed-row count equal to the fulfilled-call count every round \u2014 so the winner is never lost either.\nSchema diff is empty. `0001_init.sql` is unchanged, which is strictly stronger than backwards compatible: the previous release runs against the identical schema, so the rollback in this release carries no migration risk. The existing index `(sandbox, teacher_id, status, start_utc)` already covers the new range predicate.\n\n**3. Idempotent retry returns the original, also under concurrency.**\nTwo paths are covered and both are reachable. Same-key retry at the *same* interval: the second insert writes 0 rows (its own row now blocks it), falls to `findByKey` + `sameRequest` at `app/src/booking.js:144-145` and returns 200 replayed. Same-key at a *non-overlapping* interval: the `UNIQUE (sandbox, idem_key)` violation is caught at `:134-137` and mapped to `422 idempotency_key_reused` instead of leaking the constraint error. 300 rounds of 8 concurrent calls sharing one key: always exactly one confirmed row, one booking id, exactly one 201 and seven 200s, zero rejections.\n\n**4. Cancelled sessions never block.**\n`status = 'confirmed'` is in the `NOT EXISTS` guard (`app/src/booking.js:103`). 50 rounds of cancel-then-rebook-overlapping across all three durations: every rebook returned 201 and left exactly one confirmed row. The pre-existing `cancellation frees the slot and is idempotent` test still passes.\n\n**5. Tests.**\n`cd app && npm test` run by me: **22 pass, 0 fail, 0 skipped** (71 ms). The 17 pre-existing tests are all green and unmodified; the 5 new `overlap.test.js` tests cover the reported defect directly.\n\n### One non-blocking note (no change required)\n\nConcurrent same-key misuse where the two requests *overlap* \u2014 key `K` for 08:00/60 racing `K` for 08:30/30 \u2014 returns `409 slot_taken` rather than the `422 idempotency_key_reused` the sequential path gives, because `written === 0` is reached before the UNIQUE violation can fire (`app/src/booking.js:141-146`). I verified this: non-overlapping gives 422, overlapping gives 409. Both are honest about the outcome, exactly one row is written either way, and no criterion covers it. Worth a line of follow-up only if the API contract wants one status for key reuse regardless of timing.\n\nI agree with the implementer's call to skip the `booking_slots` table: a structural constraint that the rolled-back release would not populate protects nothing after the rollback, and criterion 2 is already satisfied at the write without a migration.\n\nMoving to the approval stage for the operator. Still unpushed and undeployed, as the constraints require."
+    },
+    {
+      "id": "82affd1c-094a-4a26-ac47-b05a0bb81f74",
+      "issueId": "64433a31-76c4-4d69-b637-92db2976b098",
+      "stageType": "approval",
+      "actorAgentId": null,
+      "actorUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+      "outcome": "approved",
+      "createdAt": "2026-10-14T13:49:32.614Z",
+      "body": "Operator decision: approve 13e6509 for release.\n\nWhat I inspected before deciding:\n- The diff 259df74..13e6509: one file, app/src/booking.js. The pre-write SELECT is gone; the overlap test is inside the INSERT ... SELECT ... WHERE NOT EXISTS, half-open interval, confirmed rows only. No schema change.\n- `npm test` on a fresh checkout of the exported commit: 22 pass, 0 fail.\n- Against a local D1 (wrangler dev, real SQLite): 5 rounds of three overlapping requests (60, 30 and 45 minutes) sent at the same instant, each round in a fresh sandbox: 201/409/409 every time, one confirmed booking per round.\n- Same script against the current staging release (37d56fd, without the fix): 3 of 3 rounds confirmed all three, so the test does detect the defect.\n- The reviewer note on concurrent same-key misuse (409 instead of 422 when the intervals overlap) is accepted as is: one row is written either way.\n\nNext: this closes the Paperclip side. Release goes through the separate path: pull request, CI, merge, staging, then the protected production environment, which needs its own approval for this exact commit."
+    },
+    {
+      "id": "ffb38fc3-a875-42e5-b851-dcc4a8579fa9",
+      "issueId": "a249ea3e-1d85-480f-801e-a6488373a535",
+      "stageType": "review",
+      "actorAgentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "actorUserId": null,
+      "outcome": "approved",
+      "createdAt": "2026-10-14T14:05:00.488Z",
+      "body": "## Approved\n\nReviewed `2dfd1b3` on `test/clock-change` against `fix/overlap` (`13e6509`). Diff is one new file, `app/tests/clock-change.test.js`, +98 lines \u2014 no source, migration, or config change, so nothing to roll back and no schema risk.\n\n**Evidence per criterion**\n\n1. **Full slot list on both sides, Sydney and Paris times** \u2014 met. Each test pins all 7 starts for a 45-minute session as `[UTC instant, Sydney label, Paris label]`:\n   - Sat 24 Oct (Sydney date): `05:00Z`\u2013`08:00Z`, Paris 07:00\u201310:00 (CEST, +2), Sydney 16:00\u201319:00.\n   - Mon 26 Oct: `06:00Z`\u2013`09:00Z`, Paris 07:00\u201310:00 (CET, +1), Sydney 17:00\u201320:00.\n   I recomputed both lists independently of the app (plain `Intl` in a scratch script) and they match exactly, so the expectations are correct values, not transcribed output. 7 starts is also right: the teacher window is 07:00\u201311:00 Paris with 30-minute steps, and a 10:30 start would end 11:15, past the edge. Offsets are asserted directly (Paris 120 \u2192 60, Sydney 660 both days), which is what makes a tzdata or offset regression fail loudly.\n2. **Booking the first Monday slot stores the correct instant** \u2014 met, and checked at the write, not just the read: the test asserts the presented booking (`2026-10-26T06:00:00.000Z` / `06:45:00.000Z`) **and** then reads `start_utc`/`end_utc` off the stored row via `SELECT \u2026 WHERE id = ?`, comparing to `Date.parse(...)`. `06:00Z` is the post-change instant; summer time would have given `05:00Z`. Validation on that path is real too \u2014 `withinAvailability` re-derives the Paris wall clock from the instant, so a wrong instant would have been rejected rather than silently stored.\n3. **Suite passes, test files only** \u2014 met. I ran `cd app && npm test` myself: **26 tests, 26 pass, 0 fail** (77 ms), including the 10 pre-existing booking/overlap/idempotency/cancellation tests and the 6 time tests. `git diff --stat fix/overlap...test/clock-change` \u2192 `1 file changed, 98 insertions(+)`. Working tree clean; no remote configured, so nothing was pushed, and no deploy.\n\n**On the flagged expectation change**\n\nThe implementer's correction is right, and I verified it against the code rather than the summary. The booking covers `06:00Z`\u2013`06:45Z`; the next start is `06:30Z`\u2013`07:15Z`, and `listSlots` marks a start taken when `b.start_utc < e && b.end_utc > s`, so `06:30Z` overlaps and both come back `taken` while `07:00Z` onward stay free. Two taken / five free is the real behaviour, and the comment in the test explains why \u2014 correct to pin that rather than change the app.\n\n**Other things I checked**\n\n- Concurrency and idempotency are untouched by this change; the single-statement `INSERT \u2026 WHERE NOT EXISTS` guard and the retry/`UNIQUE` replay paths in `createBooking` still pass their existing tests.\n- Each test calls `fresh()` for its own DB and `req()` mints a unique idempotency key, so the new file cannot leak state into or out of the rest of the suite.\n- The tests are non-vacuous: `deepEqual` against fixed 7-element arrays fails on any shift in instant, label, or list length \u2014 an empty or one-hour-off list cannot pass.\n\nOne minor, non-blocking note for later: the assertions depend on the `en-AU` label format (`'Mon, 26 Oct, 17:00'`), so an ICU formatting change in a future Node could break these alongside the existing tests that already use those labels. Not a reason to hold this."
+    },
+    {
+      "id": "fee9395a-f778-4d00-9dc4-ef3a749c4666",
+      "issueId": "a249ea3e-1d85-480f-801e-a6488373a535",
+      "stageType": "approval",
+      "actorAgentId": null,
+      "actorUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+      "outcome": "approved",
+      "createdAt": "2026-10-14T14:05:18.837Z",
+      "body": "Operator decision: approve 2dfd1b3 (tests only).\n\nWhat I inspected:\n- Diff 13e6509..2dfd1b3: one new file, app/tests/clock-change.test.js, no source change.\n- `npm test` on a fresh checkout of the exported commit: 26 pass, 0 fail.\n- The expectation the retried run corrected (a 45-minute booking at 07:00 Paris also blocks the 07:30 start) matches the overlap rule approved in BOO-1.\n\nNot merged into the released branch during this rehearsal, so the production commit stays fixed; it is pushed as its own branch with a pull request."
+    }
+  ],
+  "environmentLeases": [
+    {
+      "id": "820e271d-ce4f-4deb-85ab-ecb16b76afb8",
+      "issueId": "64433a31-76c4-4d69-b637-92db2976b098",
+      "runId": "c3d6bac5-53ac-4353-8e3c-ba681ee64a3c",
+      "status": "expired",
+      "acquiredAt": "2026-10-14T13:34:45.378Z",
+      "releasedAt": "2026-10-14T13:37:53.331Z"
+    },
+    {
+      "id": "031828f6-40fe-4d9f-8620-cbfc7b55dbd7",
+      "issueId": "64433a31-76c4-4d69-b637-92db2976b098",
+      "runId": "ac2e58b4-26bd-4fd6-93f4-eabde717f4fc",
+      "status": "expired",
+      "acquiredAt": "2026-10-14T13:44:06.001Z",
+      "releasedAt": "2026-10-14T13:46:11.052Z"
+    },
+    {
+      "id": "d1d3fdb3-e740-4b0a-9236-a27501b18758",
+      "issueId": "a249ea3e-1d85-480f-801e-a6488373a535",
+      "runId": "4df71ce7-b366-4a2a-822f-8c292534323a",
+      "status": "failed",
+      "acquiredAt": "2026-10-14T13:58:21.633Z",
+      "releasedAt": "2026-10-14T13:59:22.032Z"
+    },
+    {
+      "id": "28963629-234c-4494-a907-86fc9bf70e13",
+      "issueId": "a249ea3e-1d85-480f-801e-a6488373a535",
+      "runId": "5d5fac7d-4a9d-4fb5-83ca-8bb8c1570c56",
+      "status": "expired",
+      "acquiredAt": "2026-10-14T14:00:03.498Z",
+      "releasedAt": "2026-10-14T14:01:42.007Z"
+    },
+    {
+      "id": "fd3ce6b6-51ed-4cd7-b3b5-d1e2a35a406d",
+      "issueId": "a249ea3e-1d85-480f-801e-a6488373a535",
+      "runId": "afa2240c-e85e-48ba-b32d-8254eacc29eb",
+      "status": "expired",
+      "acquiredAt": "2026-10-14T14:03:12.138Z",
+      "releasedAt": "2026-10-14T14:05:00.627Z"
+    }
+  ],
+  "redactions": {}
+}

@@ -1,0 +1,221 @@
+{
+  "recordedOn": "2026-10-14",
+  "paperclip": {
+    "version": "2026.1012.0",
+    "commit": "bba6a45f0d364cfd962ac59b3bdf2426a8222adb",
+    "install": "npm paperclipai@2026.1012.0 in a container (paperclip/Dockerfile), embedded Postgres, authenticated mode"
+  },
+  "adapter": {
+    "type": "claude_local",
+    "engine": "cli",
+    "model": "claude-opus-5 (adapter default; the run command line shows --model claude-opus-5)",
+    "dangerouslySkipPermissions": true,
+    "claudeCode": "2.1.299",
+    "auth": "CLAUDE_CODE_OAUTH_TOKEN for an existing paid Claude subscription; extra usage disabled (raw/subscription_usage.json)"
+  },
+  "isolation": {
+    "runtime": "Docker container on a Linux VM; only named volumes for /paperclip and /work, nothing mounted from the host",
+    "environmentVariableNames": [
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC",
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "DISABLE_AUTOUPDATER",
+      "HOME",
+      "HOST",
+      "HOSTNAME",
+      "NODE_VERSION",
+      "PAPERCLIP_HOME",
+      "PAPERCLIP_NO_BROWSER",
+      "PAPERCLIP_OPEN_ON_LISTEN",
+      "PATH",
+      "PORT",
+      "PWD",
+      "YARN_VERSION"
+    ],
+    "gitRemotesInAgentRepo": 0,
+    "deployCredentialsInContainer": false,
+    "githubCredentialsInContainer": false
+  },
+  "humans": {
+    "paperclipOperatorUser": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf (display name Operator, operator@example.com), a real Paperclip user account operated for this rehearsal",
+    "githubApprover": "the repository owner account, used as the operator account for release approvals"
+  },
+  "agents": {
+    "Reviewer": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+    "Implementer": "8513178a-52d4-4d32-87f5-f913863dd594"
+  },
+  "issues": {
+    "BOO-1": {
+      "id": "64433a31-76c4-4d69-b637-92db2976b098",
+      "status": "done",
+      "createdAt": "2026-10-14T13:34:45.158Z",
+      "completedAt": "2026-10-14T13:49:32.616Z"
+    },
+    "BOO-2": {
+      "id": "a249ea3e-1d85-480f-801e-a6488373a535",
+      "status": "done",
+      "createdAt": "2026-10-14T13:58:21.440Z",
+      "completedAt": "2026-10-14T14:05:18.839Z"
+    }
+  },
+  "runs": [
+    {
+      "id": "c3d6bac5-53ac-4353-8e3c-ba681ee64a3c",
+      "agent": "Implementer",
+      "issue": "BOO-1",
+      "status": "cancelled",
+      "errorCode": "issue_reassigned",
+      "startedAt": "2026-10-14T13:34:45.229Z",
+      "finishedAt": "2026-10-14T13:37:53.127Z"
+    },
+    {
+      "id": "ac2e58b4-26bd-4fd6-93f4-eabde717f4fc",
+      "agent": "Reviewer",
+      "issue": "BOO-1",
+      "status": "cancelled",
+      "errorCode": "issue_reassigned",
+      "startedAt": "2026-10-14T13:44:05.842Z",
+      "finishedAt": "2026-10-14T13:46:10.868Z"
+    },
+    {
+      "id": "4df71ce7-b366-4a2a-822f-8c292534323a",
+      "agent": "Implementer",
+      "issue": "BOO-2",
+      "status": "failed",
+      "errorCode": "adapter_failed",
+      "startedAt": "2026-10-14T13:58:21.504Z",
+      "finishedAt": "2026-10-14T13:59:21.907Z"
+    },
+    {
+      "id": "5d5fac7d-4a9d-4fb5-83ca-8bb8c1570c56",
+      "agent": "Implementer",
+      "issue": "BOO-2",
+      "status": "cancelled",
+      "errorCode": "issue_reassigned",
+      "startedAt": "2026-10-14T14:00:03.366Z",
+      "finishedAt": "2026-10-14T14:01:41.859Z"
+    },
+    {
+      "id": "afa2240c-e85e-48ba-b32d-8254eacc29eb",
+      "agent": "Reviewer",
+      "issue": "BOO-2",
+      "status": "cancelled",
+      "errorCode": "issue_reassigned",
+      "startedAt": "2026-10-14T14:03:12.035Z",
+      "finishedAt": "2026-10-14T14:05:00.460Z"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "2d116f42-c87a-468b-83be-357bc211a87e",
+      "issue": "BOO-1",
+      "stage": "review",
+      "outcome": "approved",
+      "by": "Reviewer agent",
+      "at": "2026-10-14T13:46:10.914Z"
+    },
+    {
+      "id": "82affd1c-094a-4a26-ac47-b05a0bb81f74",
+      "issue": "BOO-1",
+      "stage": "approval",
+      "outcome": "approved",
+      "by": "operator user",
+      "at": "2026-10-14T13:49:32.614Z"
+    },
+    {
+      "id": "ffb38fc3-a875-42e5-b851-dcc4a8579fa9",
+      "issue": "BOO-2",
+      "stage": "review",
+      "outcome": "approved",
+      "by": "Reviewer agent",
+      "at": "2026-10-14T14:05:00.488Z"
+    },
+    {
+      "id": "fee9395a-f778-4d00-9dc4-ef3a749c4666",
+      "issue": "BOO-2",
+      "stage": "approval",
+      "outcome": "approved",
+      "by": "operator user",
+      "at": "2026-10-14T14:05:18.837Z"
+    }
+  ],
+  "skippedWakeups": [
+    {
+      "id": "89a620ff-fb82-4a60-813e-e84e694d0d69",
+      "reason": "execution_reconciliation_required",
+      "at": "2026-10-14T13:37:53.250Z",
+      "error": "The previous execution has not released its environment lease. Wait for cleanup before continuing this task."
+    },
+    {
+      "id": "5b2d27dc-d595-4d8c-8eec-b0c92340dfd5",
+      "reason": "execution_reconciliation_required",
+      "at": "2026-10-14T14:01:41.964Z",
+      "error": "The previous execution has not released its environment lease. Wait for cleanup before continuing this task."
+    }
+  ],
+  "commits": {
+    "baselineA": "37d56fd159caf8528350a786e6d0c57a7f81bdc5",
+    "seededRequirement": "259df74e29a3f1e3df7b795cf06692a67b02977b",
+    "agentFix": "13e650970474c7b98270d233efee21b9288a3db2",
+    "releaseB_merge": "7e4de349e1112cf89b2624f0731951a2a822d773",
+    "agentTestsBOO2": "2dfd1b3 (branch test/clock-change, PR #2, not merged)",
+    "releaseToolingFix": "3f0b73810cea0bc98d779607d8355ee8a055459d"
+  },
+  "github": {
+    "redTestRunOnRequirement": 38575163046,
+    "releaseRuns": [
+      {
+        "run": 38573430100,
+        "commit": "37d56fd",
+        "production": "attempt 1 rejected by the operator account at 13:39:25 (deployment 7066941413, nothing deployed); attempt 2 approved, A live 13:40:02; smoke step failed (operator script bug, fixed in f503b2f)"
+      },
+      {
+        "run": 38575241258,
+        "commit": "7e4de34",
+        "production": "waited while A was live; approved; B live 13:52:15 (deployment 7067251932)"
+      },
+      {
+        "run": 38575550768,
+        "commit": "37d56fd (rollback)",
+        "production": "never reached: staging smoke failed because the old commit carried the old smoke script; fixed in 3f0b738"
+      },
+      {
+        "run": 38575788870,
+        "commit": "37d56fd (rollback)",
+        "production": "approved; A live 13:55:40 (deployment 7067340071; GitHub records the workflow commit 3f0b738, /api/health reports the app commit)"
+      },
+      {
+        "run": 38576054136,
+        "commit": "7e4de34 (roll forward)",
+        "production": "approved; B live 13:57:45 (deployment 7067391660)"
+      }
+    ]
+  },
+  "rollbackDrill": {
+    "sandbox": "rollback-drill-20261014",
+    "files": [
+      "raw/rollback_01_on_B.json",
+      "raw/rollback_02_back_on_A.json",
+      "raw/rollback_03_forward_on_B.json"
+    ],
+    "result": "5 bookings made under A, B and A again are all present after A to B to A to B",
+    "notCovered": "database restore, external side effects, rechecking bookings taken while A was back"
+  },
+  "operatorInterventionsOutsidePlan": [
+    "13:44 re-woke the Reviewer on BOO-1 after its wake-up was skipped (lease not released, 81 ms race)",
+    "14:03 re-woke the Reviewer on BOO-2 after the same skip (43 ms race)",
+    "13:41 fixed the smoke script (curl | grep -q under pipefail)",
+    "13:54 changed the release workflow so tooling comes from the workflow commit, not the release commit"
+  ],
+  "plannedDrills": [
+    "13:39 rejected the first production request on purpose",
+    "13:59 killed the Implementer process on BOO-2 mid-run (SIGKILL); Paperclip retried after 30 s and the retry finished the task"
+  ],
+  "setupOutsidePaperclip": [
+    "baseline app and tests",
+    "seeded failing test",
+    "GitHub repository, environments and release workflow",
+    "Paperclip container, onboarding, company, agents, goal and tickets (created through the API as the operator user)",
+    "moving agent commits out of the container (git bundle) and opening the pull requests",
+    "release approvals in GitHub"
+  ]
+}

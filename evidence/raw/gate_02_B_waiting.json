@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-14T13:51:38Z",
+  "note": "B (7e4de34) is on staging; production still runs A and the B run waits for its own approval",
+  "production": {
+    "ok": true,
+    "env": "production",
+    "sha": "37d56fd159caf8528350a786e6d0c57a7f81bdc5",
+    "deployedAt": "2026-10-14T13:40:02Z",
+    "bookingsStored": 2
+  },
+  "staging": {
+    "ok": true,
+    "env": "staging",
+    "sha": "7e4de349e1112cf89b2624f0731951a2a822d773",
+    "deployedAt": "2026-10-14T13:51:15Z",
+    "bookingsStored": 9
+  }
+}
