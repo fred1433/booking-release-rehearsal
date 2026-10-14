@@ -48,7 +48,12 @@ export function withinAvailability(startMs, durationMin, teacher = TEACHER) {
   });
 }
 
-function validateRequest(req, now) {
+/**
+ * Shape of the request only: the answers do not change as the clock moves, so these run
+ * before the idempotency lookup. A replay of a booking that already succeeded has to get
+ * its original answer back however long the retry took.
+ */
+function validateStructure(req) {
   if (!validSandbox(req.sandbox)) throw new BookingError(400, 'bad_sandbox', 'sandbox must be 8-40 chars of a-z, 0-9 or -');
   if (typeof req.idempotencyKey !== 'string' || req.idempotencyKey.length < 8 || req.idempotencyKey.length > 80)
     throw new BookingError(400, 'bad_idempotency_key', 'idempotencyKey is required (8-80 chars)');
@@ -59,11 +64,18 @@ function validateRequest(req, now) {
   const start = hasZone ? Date.parse(req.start) : NaN;
   if (!Number.isFinite(start)) throw new BookingError(400, 'bad_start', 'start must be an ISO-8601 instant with Z or a UTC offset');
   if (start % (STEP_MIN * 60000) !== 0) throw new BookingError(400, 'bad_start', 'start must be on a 15-minute boundary');
-  if (start < now + MIN_LEAD_MS) throw new BookingError(422, 'too_soon', 'start must be at least one hour ahead');
-  if (start > now + MAX_AHEAD_DAYS * 86400000) throw new BookingError(422, 'too_far', `start must be within ${MAX_AHEAD_DAYS} days`);
-  if (!withinAvailability(start, duration)) throw new BookingError(422, 'outside_availability', 'the teacher is not available for that whole session');
   const learnerTz = checkTz(req.learnerTz || LEARNER_TZ);
   return { sandbox: req.sandbox, key: req.idempotencyKey, duration, start, end: start + duration * 60000, learnerTz };
+}
+
+/**
+ * Eligibility rules, which move with the clock: at least one hour ahead, within 28 days,
+ * inside the teacher's availability. They gate a new booking only, never a replay.
+ */
+function checkEligibility(v, now) {
+  if (v.start < now + MIN_LEAD_MS) throw new BookingError(422, 'too_soon', 'start must be at least one hour ahead');
+  if (v.start > now + MAX_AHEAD_DAYS * 86400000) throw new BookingError(422, 'too_far', `start must be within ${MAX_AHEAD_DAYS} days`);
+  if (!withinAvailability(v.start, v.duration)) throw new BookingError(422, 'outside_availability', 'the teacher is not available for that whole session');
 }
 
 export function present(row) {
@@ -93,13 +105,14 @@ async function findByKey(db, sandbox, key) {
 
 /**
  * Insert the booking only if no confirmed session of this teacher in this sandbox
- * overlaps [start, end). Returns the number of rows written: 0 means someone else holds
- * part of that interval.
+ * overlaps [start, end), and only if the sandbox holds fewer than the maximum number of
+ * confirmed bookings. Returns the number of rows written: 0 means one of those two held.
  *
- * The overlap test lives inside the INSERT on purpose. SQLite, and therefore D1, runs a
- * single statement in its own transaction while holding the write lock, so no other request
- * can slip a row in between the test and the write. A separate SELECT could be overtaken,
- * which is how two sessions of different lengths used to both get confirmed.
+ * Both tests live inside the INSERT on purpose. SQLite, and therefore D1, runs a single
+ * statement in its own transaction while holding the write lock, so no other request can
+ * slip a row in between a test and the write. A separate SELECT could be overtaken, which
+ * is how two sessions of different lengths used to both get confirmed, and how concurrent
+ * requests used to push a sandbox past its limit.
  */
 async function insertIfFree(db, v, { id, now, appSha }) {
   const res = await db
@@ -107,12 +120,31 @@ async function insertIfFree(db, v, { id, now, appSha }) {
                 price_cents, currency, status, idem_key, created_at, app_sha)
               SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?
               WHERE NOT EXISTS (SELECT 1 FROM bookings WHERE sandbox = ? AND teacher_id = ?
-                AND status = 'confirmed' AND start_utc < ? AND end_utc > ?)`)
+                AND status = 'confirmed' AND start_utc < ? AND end_utc > ?)
+                AND (SELECT COUNT(*) FROM bookings WHERE sandbox = ? AND status = 'confirmed') < ?`)
     .bind(id, v.sandbox, TEACHER.id, v.start, v.end, v.duration, TEACHER.tz, v.learnerTz,
       TEACHER.prices[v.duration], TEACHER.currency, v.key, now, appSha,
-      v.sandbox, TEACHER.id, v.end, v.start)
+      v.sandbox, TEACHER.id, v.end, v.start,
+      v.sandbox, MAX_BOOKINGS_PER_SANDBOX)
     .run();
   return res?.meta?.changes ?? 0;
+}
+
+/**
+ * Why a write found no room. Read after the fact, so the obstacle can already be gone
+ * (someone cancelled); the lost race is then reported as a conflict.
+ */
+async function refusal(db, v) {
+  const taken = new BookingError(409, 'slot_taken', 'the teacher already has a session at that time');
+  const overlap = await db
+    .prepare(`SELECT 1 AS hit FROM bookings WHERE sandbox = ? AND teacher_id = ?
+              AND status = 'confirmed' AND start_utc < ? AND end_utc > ? LIMIT 1`)
+    .bind(v.sandbox, TEACHER.id, v.end, v.start).first();
+  if (overlap) return taken;
+  const count = await db.prepare("SELECT COUNT(*) AS n FROM bookings WHERE sandbox = ? AND status = 'confirmed'").bind(v.sandbox).first();
+  if (count && count.n >= MAX_BOOKINGS_PER_SANDBOX)
+    return new BookingError(429, 'sandbox_full', `this sandbox already holds ${MAX_BOOKINGS_PER_SANDBOX} bookings; reset it`);
+  return taken;
 }
 
 /**
@@ -120,16 +152,17 @@ async function insertIfFree(db, v, { id, now, appSha }) {
  * A retry with the same idempotency key returns the original booking (status 200).
  */
 export async function createBooking(db, req, { now = Date.now(), appSha = 'dev', newId = () => crypto.randomUUID() } = {}) {
-  const v = validateRequest(req, now);
+  const v = validateStructure(req);
 
   const prior = await findByKey(db, v.sandbox, v.key);
   if (prior) {
     if (!sameRequest(prior, v)) throw new BookingError(422, 'idempotency_key_reused', 'this idempotency key was used for a different booking');
+    // The original answer, whatever the clock says now and whether or not it was cancelled.
     return { status: 200, booking: present(prior), replayed: true };
   }
 
-  const count = await db.prepare("SELECT COUNT(*) AS n FROM bookings WHERE sandbox = ? AND status = 'confirmed'").bind(v.sandbox).first();
-  if (count && count.n >= MAX_BOOKINGS_PER_SANDBOX) throw new BookingError(429, 'sandbox_full', 'this sandbox already holds 40 bookings; reset it');
+  // Only a new booking has to be eligible.
+  checkEligibility(v, now);
 
   const id = newId();
   let written;
@@ -145,11 +178,11 @@ export async function createBooking(db, req, { now = Date.now(), appSha = 'dev',
     throw e;
   }
   if (written === 0) {
-    // The interval is taken. If it is taken by a concurrent retry of this very request,
-    // the retry has to see the original booking rather than a conflict.
+    // The interval is taken, or the sandbox is full. If the interval is taken by a concurrent
+    // retry of this very request, the retry has to see the original booking rather than a conflict.
     const row = await findByKey(db, v.sandbox, v.key);
     if (row && sameRequest(row, v)) return { status: 200, booking: present(row), replayed: true };
-    throw new BookingError(409, 'slot_taken', 'the teacher already has a session at that time');
+    throw await refusal(db, v);
   }
   const row = await db.prepare('SELECT * FROM bookings WHERE id = ?').bind(id).first();
   return { status: 201, booking: present(row), replayed: false };
