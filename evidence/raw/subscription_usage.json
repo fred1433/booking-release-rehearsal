@@ -21,5 +21,25 @@
       "used_credits": null,
       "credits_ever_enabled": false
     }
+  },
+  "secondRun_BOO3": {
+    "before": {
+      "checkedAt": "2026-10-14T14:54:35Z",
+      "extraUsageEnabled": false,
+      "fiveHour": 0.0,
+      "sevenDay": 30.0,
+      "extraUsage": {
+        "is_enabled": false,
+        "used_credits": null,
+        "credits_ever_enabled": false
+      }
+    },
+    "after": {
+      "checkedAt": "2026-10-14T15:04:00Z",
+      "extraUsageEnabled": false,
+      "fiveHour": 2.0,
+      "sevenDay": 30.0,
+      "note": "usage figures read once at about 15:05 UTC; later reads were rate-limited, so the extra-usage block was not captured again; the profile flag above was"
+    }
   }
 }

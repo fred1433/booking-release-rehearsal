@@ -56,6 +56,12 @@
       "status": "done",
       "createdAt": "2026-10-14T13:58:21.440Z",
       "completedAt": "2026-10-14T14:05:18.839Z"
+    },
+    "BOO-3": {
+      "id": "4516d679-9010-408f-b9c0-adbaf40afce6",
+      "status": "done",
+      "createdAt": "2026-10-14T14:56:48.139Z",
+      "completedAt": "2026-10-14T15:03:30.197Z"
     }
   },
   "runs": [
@@ -103,6 +109,24 @@
       "errorCode": "issue_reassigned",
       "startedAt": "2026-10-14T14:03:12.035Z",
       "finishedAt": "2026-10-14T14:05:00.460Z"
+    },
+    {
+      "id": "dd29b676-87c0-4a5e-a4f6-101b4cd86538",
+      "agent": "Implementer",
+      "issue": "BOO-3",
+      "status": "cancelled",
+      "errorCode": "issue_reassigned",
+      "startedAt": "2026-10-14T14:56:48.218Z",
+      "finishedAt": "2026-10-14T14:59:49.592Z"
+    },
+    {
+      "id": "3928a38f-11f0-497e-87bb-5d75530fa40c",
+      "agent": "Reviewer",
+      "issue": "BOO-3",
+      "status": "cancelled",
+      "errorCode": "issue_reassigned",
+      "startedAt": "2026-10-14T15:00:00.938Z",
+      "finishedAt": "2026-10-14T15:03:01.225Z"
     }
   ],
   "decisions": [
@@ -137,6 +161,22 @@
       "outcome": "approved",
       "by": "operator user",
       "at": "2026-10-14T14:05:18.837Z"
+    },
+    {
+      "id": "f441ec41-e2eb-4f7d-85af-e2dc7db51ed6",
+      "issue": "BOO-3",
+      "stage": "review",
+      "outcome": "approved",
+      "by": "Reviewer agent",
+      "at": "2026-10-14T15:03:01.262Z"
+    },
+    {
+      "id": "eb13c9e5-c9cf-4d5e-bee1-a076309cf58f",
+      "issue": "BOO-3",
+      "stage": "approval",
+      "outcome": "approved",
+      "by": "operator user",
+      "at": "2026-10-14T15:03:30.195Z"
     }
   ],
   "skippedWakeups": [
@@ -151,15 +191,23 @@
       "reason": "execution_reconciliation_required",
       "at": "2026-10-14T14:01:41.964Z",
       "error": "The previous execution has not released its environment lease. Wait for cleanup before continuing this task."
+    },
+    {
+      "id": "6725af10-e529-4fb2-bd0c-3e1dfc01b836",
+      "reason": "execution_reconciliation_required",
+      "at": "2026-10-14T14:59:49.735Z",
+      "error": "The previous execution has not released its environment lease. Wait for cleanup before continuing this task."
     }
   ],
   "commits": {
     "baselineA": "37d56fd159caf8528350a786e6d0c57a7f81bdc5",
     "seededRequirement": "259df74e29a3f1e3df7b795cf06692a67b02977b",
     "agentFix": "13e650970474c7b98270d233efee21b9288a3db2",
-    "releaseB_merge": "7e4de349e1112cf89b2624f0731951a2a822d773",
     "agentTestsBOO2": "2dfd1b3 (branch test/clock-change, PR #2, not merged)",
-    "releaseToolingFix": "3f0b73810cea0bc98d779607d8355ee8a055459d"
+    "requirementBOO3": "143ee46",
+    "agentFixBOO3": "f62a312",
+    "mergeBOO3_local": "609943a",
+    "releaseB_appCode": "db5931d (built as 7e4de34 in the working repository)"
   },
   "github": {
     "redTestRunOnRequirement": 38575163046,
@@ -205,7 +253,8 @@
     "13:44 re-woke the Reviewer on BOO-1 after its wake-up was skipped (lease not released, 81 ms race)",
     "14:03 re-woke the Reviewer on BOO-2 after the same skip (43 ms race)",
     "13:41 fixed the smoke script (curl | grep -q under pipefail)",
-    "13:54 changed the release workflow so tooling comes from the workflow commit, not the release commit"
+    "13:54 changed the release workflow so tooling comes from the workflow commit, not the release commit",
+    "15:00 none needed on BOO-3: the reconciler woke the reviewer"
   ],
   "plannedDrills": [
     "13:39 rejected the first production request on purpose",
@@ -217,19 +266,25 @@
     "GitHub repository, environments and release workflow",
     "Paperclip container, onboarding, company, agents, goal and tickets (created through the API as the operator user)",
     "moving agent commits out of the container (git bundle) and opening the pull requests",
-    "release approvals in GitHub"
+    "release approvals in GitHub",
+    "handoff reconciler run by the operator session beside Paperclip",
+    "BOO-3 requirement test, local merge and local deployment",
+    "post-run page and API corrections (README)"
   ],
   "releaseGate": "Production deployed only from an approved run in the protected production environment (admin bypass off). The staging job deployed on every push to main with the same account-wide Cloudflare token and no reviewer, so the gate held the production job, not the only key. Both deploy secrets were removed from the GitHub environments at 14:50 UTC after the run; later corrections were deployed locally by the build session.",
-  "historyRewrite": {
-    "why": "remove a third-party name from documentation and set the merge author to Operator, after the run",
-    "unchanged": "b231851, 1d8db4b, 259df74, 13e6509, 37d56fd, f503b2f",
-    "mapping": {
-      "1772f30": "287e6cf",
-      "7e4de349e1112cf89b2624f0731951a2a822d773": "db5931d1e5d82aea2967cbce51aee081571cb3fd",
-      "3f0b73810cea0bc98d779607d8355ee8a055459d": "42f09fb780937a7a3010dfeeddea2b1c5ae7b55e",
-      "8a6507d": "ad6c9e3",
-      "d621d66": "eb531ab"
-    },
-    "appTreeOfReleaseB": "9acb214ecf35072d4f38e94488916cab0e87d2d2 (identical before and after)"
+  "repository": {
+    "public": "https://github.com/fred1433/booking-release-rehearsal",
+    "note": "Republished on 14 Oct 2026 from a private working repository; GitHub run, PR, approval and deployment data from it is in evidence/github/github-record.json. Ids such as 7e4de34 and 3f0b738 in that file belong to the working repository."
+  },
+  "builds": {
+    "recordedReleaseA": "37d56fd via the gate, 13:40:02",
+    "recordedReleaseB": "7e4de34 (app code = db5931d here) via the gate, 13:52:15; rollback 13:55:40, forward 13:57:45",
+    "currentDemoBuild": "shown by /app/api/health (deployedBy: operator session, local wrangler); deployed after the gate secrets were removed at 14:50 UTC"
+  },
+  "handoffReconciler": {
+    "script": "scripts/handoff-reconciler.mjs",
+    "liveRun": "BOO-3: wake-up skipped 14:59:49.735, lease released 14:59:49.830, reconciler woke the reviewer 15:00:00.8 (once), one review run 3928a38f started 15:00:00.938",
+    "log": "evidence/raw/handoff_reconciler.log",
+    "unitTests": "app/tests/handoff-reconciler.test.js (blocker path tested only there)"
   }
 }

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Paperclip booking-release rehearsal</title>
-<meta name="description" content="A small booking release run through a real Paperclip instance: a seeded double-booking defect, an agent fix and review, an approval through the operator account, a protected production release and a tested rollback. Synthetic data.">
+<meta name="description" content="Three tickets on a small booking app, run through a real Paperclip instance: a seeded double-booking fix, review, approval through an operator account, a release gate, a rollback, and a skipped handoff recovered by a reconciler. Synthetic data.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -15,7 +15,7 @@
 <style>
 :root{
   --paper:#FAFAF8; --wall:#EDEFF1; --ink:#211B2C; --pencil:#625C6E; --rule:#D9D6DE;
-  --tape:#D81F5A; --standby:#F2C230; --satin:#F1D5CE; --satin-ink:#7A3B33; --ci:#C9CED6;
+  --tape:#D81F5A; --standby:#F2C230; --satin:#F1D5CE; --satin-ink:#7A3B33; --ci:#C9CED6; --ok:#1F7A55;
   --serif:"Bodoni Moda", Didot, Georgia, serif; --sans:"Hanken Grotesk", system-ui, sans-serif;
 }
 *{box-sizing:border-box}
@@ -26,93 +26,112 @@ a:hover{color:var(--tape)}
 :focus-visible{outline:2.5px solid var(--tape);outline-offset:3px}
 .page{max-width:1240px;margin:0 auto;padding:0 32px}
 
-/* Title block */
-header{padding:48px 0 32px;border-bottom:1px solid var(--rule)}
-h1{font:600 clamp(42px,5.6vw,80px)/.98 var(--serif);letter-spacing:-.02em;margin:0;max-width:22ch}
+header{padding:40px 0 26px;border-bottom:1px solid var(--rule)}
+h1{font:600 clamp(40px,5.2vw,74px)/.98 var(--serif);letter-spacing:-.02em;margin:0}
 .nw{white-space:nowrap}
-.disclaimer{margin:22px 0 0;font-size:16px;color:var(--ink);display:inline-block;padding:6px 12px;background:var(--wall);border-left:4px solid var(--standby)}
-.lede{margin:22px 0 0;max-width:62ch;font-size:19px;color:var(--pencil)}
+.lede{margin:16px 0 0;max-width:70ch;font-size:18px;color:var(--pencil)}
 .lede b{color:var(--ink);font-weight:600}
-.opnote{margin:14px 0 0;max-width:70ch;font-size:15px;color:var(--ink);padding-left:12px;border-left:4px solid var(--tape)}
+.notice{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14.5px}
+.notice span{padding:4px 10px;background:var(--wall);border-left:4px solid var(--standby)}
+.notice span.op{border-left-color:var(--tape)}
 
-/* Spread: the released app on the left, the calls on the right */
-.spread{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:56px;padding:36px 0 64px;align-items:start}
-.stage{}
+h2{font:600 30px/1.1 var(--serif);margin:0 0 6px;letter-spacing:-.01em}
+h3{font:600 15.5px/1.3 var(--sans);margin:0 0 6px}
+.sub{margin:0 0 18px;color:var(--pencil);font-size:15.5px;max-width:62ch}
+
+/* Spread: the app on the left, the result on the right */
+.spread{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.04fr);gap:52px;padding:26px 0 56px;align-items:start}
+.build{font-size:13.5px;color:var(--pencil);margin:0 0 10px;max-width:62ch}
+.build b{color:var(--ink);font-weight:600}
 .frame{position:relative;background:#fff;border:1px solid var(--rule);border-radius:14px;overflow:hidden}
-/* spike tape marks at the corners, as on a rehearsal floor */
 .frame::before,.frame::after{content:"";position:absolute;width:46px;height:12px;background:var(--tape);z-index:2;opacity:.92}
 .frame::before{top:10px;left:-8px;transform:rotate(-38deg)}
 .frame::after{bottom:12px;right:-9px;transform:rotate(-38deg)}
 iframe{display:block;width:100%;height:1500px;border:0}
-.caption{font-size:14.5px;color:var(--pencil);margin:12px 2px 0;max-width:60ch}
-.caption b{color:var(--ink);font-weight:600}
 
-h2{font:600 34px/1.1 var(--serif);margin:0 0 6px;letter-spacing:-.01em}
-.sub{margin:0 0 22px;color:var(--pencil);font-size:15.5px;max-width:60ch}
+.result{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink)}
+.result li{padding:12px 0 13px;border-bottom:1px solid var(--rule);display:grid;grid-template-columns:118px minmax(0,1fr);gap:14px}
+.result .k{font:italic 600 19px/1.25 var(--serif)}
+.result p{margin:0;font-size:15.5px}
+.result p+p{margin-top:4px;color:var(--pencil);font-size:14.5px}
+.handoffs{margin:18px 0 0;padding:14px 16px;background:var(--satin);color:var(--satin-ink);border-radius:2px}
+.handoffs h3{color:var(--satin-ink);font:italic 600 19px/1.25 var(--serif);margin-bottom:8px}
+.handoffs ol{margin:0;padding-left:20px;font-size:15px}
+.handoffs li{margin:3px 0}
+.handoffs b{font-weight:600}
 
-/* The calls */
-.calls{list-style:none;margin:0;padding:0;counter-reset:q}
-.call{display:grid;grid-template-columns:62px minmax(0,1fr);gap:0 16px;padding:16px 0 18px;border-top:1px solid var(--rule)}
-.call:last-child{border-bottom:1px solid var(--rule)}
-.q{font:italic 600 30px/1 var(--serif);color:var(--ink);padding-top:2px}
-.q small{display:block;font:500 12.5px/1.3 var(--sans);font-style:normal;color:var(--pencil);margin-top:6px;font-variant-numeric:tabular-nums}
-.what{margin:0;font-size:16.5px}
+.phases{list-style:none;margin:26px 0 0;padding:0;counter-reset:ph}
+.phases li{display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--rule)}
+.phases li::before{counter-increment:ph;content:counter(ph);font:italic 600 26px/1 var(--serif)}
+.phases b{font-weight:600}
+.phases span{color:var(--pencil);font-size:15px}
+
+.next{margin-top:26px;padding:18px 18px 16px;border:1.5px solid var(--ink);border-radius:12px}
+.next p{margin:0 0 10px;font-size:15.5px}
+.next ol{margin:0 0 12px;padding-left:20px;font-size:15px;color:var(--pencil)}
+.cta{display:inline-block;background:var(--tape);color:#fff;text-decoration:none;font-weight:600;padding:10px 18px;border-radius:999px}
+.cta:hover{color:#fff;background:#B5174A}
+
+/* Trace and extracts */
+details{border-top:2px solid var(--ink);padding:16px 0}
+details+details{border-top:1px solid var(--rule)}
+summary{cursor:pointer;font:600 24px/1.2 var(--serif);list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"  +";color:var(--tape)}
+details[open] summary::after{content:"  −"}
+summary small{display:block;font:400 15px/1.4 var(--sans);color:var(--pencil);margin-top:4px}
+.calls{list-style:none;margin:16px 0 0;padding:0;max-width:880px}
+.call{display:grid;grid-template-columns:70px minmax(0,1fr);gap:0 16px;padding:12px 0 14px;border-top:1px solid var(--rule)}
+.q{font:600 15px/1.3 var(--sans);font-variant-numeric:tabular-nums;color:var(--pencil);padding-top:3px}
+.what{margin:0;font-size:16px}
 .what strong{font-weight:600}
 .who{display:inline-block;font-size:12.5px;font-weight:600;padding:1px 8px;margin-right:8px;vertical-align:2px;transform:rotate(-1.2deg)}
 .who.agent{background:var(--standby)}
 .who.op{background:var(--tape);color:#fff}
 .who.paperclip{background:var(--ink);color:var(--paper)}
 .who.ci{background:var(--ci)}
-.detail{margin:6px 0 0;color:var(--pencil);font-size:15px}
-.detail a{color:var(--ink)}
-.note{margin:10px 0 0;padding:8px 12px;background:var(--satin);color:var(--satin-ink);font:italic 500 16px/1.4 var(--serif);border-radius:2px}
+.who.rec{background:var(--ok);color:#fff}
+.detail{margin:5px 0 0;color:var(--pencil);font-size:15px}
+.note{margin:8px 0 0;padding:7px 12px;background:var(--satin);color:var(--satin-ink);font:italic 500 15.5px/1.4 var(--serif);border-radius:2px}
+.extracts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:16px}
+.extract{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;background:#fff;scroll-margin-top:20px}
+.extract h3{margin-bottom:4px}
+.extract .src{font-size:13px;color:var(--pencil);margin:0 0 8px}
+.extract blockquote{margin:0;font-size:14.5px;line-height:1.5;color:var(--ink);white-space:pre-wrap;border-left:3px solid var(--standby);padding-left:10px}
 
-/* Rehearsal report */
-.report{border-top:2px solid var(--ink);padding:44px 0 56px}
-.report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin-top:20px;border-left:1px solid var(--rule)}
-.dept{padding:4px 22px 6px;border-right:1px solid var(--rule)}
-.dept h3{font:600 15px/1.3 var(--sans);margin:0 0 10px}
-.fig{font:600 46px/1 var(--serif);display:block;margin-bottom:6px}
-.dept p{margin:0;font-size:15px;color:var(--pencil)}
-.broke{margin-top:40px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 48px}
-.broke h3{font:600 21px/1.25 var(--serif);margin:0 0 6px}
-.broke p{margin:0;font-size:16px;color:var(--pencil)}
-.broke p b{color:var(--ink);font-weight:600}
+.report{border-top:2px solid var(--ink);padding:34px 0 44px}
+.report-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:16px;border-left:1px solid var(--rule)}
+.dept{padding:4px 20px 6px;border-right:1px solid var(--rule)}
+.fig{font:600 42px/1 var(--serif);display:block;margin:6px 0}
+.dept p{margin:0;font-size:14.5px;color:var(--pencil)}
 
-/* Boundary */
-.boundary{border-top:1px solid var(--rule);padding:44px 0 72px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:56px}
-.boundary p{margin:0 0 14px;max-width:62ch}
-.boundary .quiet{color:var(--pencil);font-size:15.5px}
+.boundary{border-top:1px solid var(--rule);padding:34px 0 60px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:52px}
+.boundary p{margin:0 0 12px;max-width:64ch}
+.boundary .quiet{color:var(--pencil);font-size:15px}
 .docs{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
 .docs li{border-bottom:1px solid var(--rule)}
-.docs a{display:block;padding:12px 0;text-decoration:none}
+.docs a{display:block;padding:11px 0;text-decoration:none}
 .docs a span{display:block;font-size:14px;color:var(--pencil)}
 .docs a b{font-weight:600}
 .docs a:hover b{color:var(--tape)}
-.sign{margin-top:26px;font-size:15.5px}
-.sign a{font-weight:600}
 footer{border-top:1px solid var(--rule);padding:18px 0 40px;color:var(--pencil);font-size:13.5px}
 
 @media (max-width:1020px){
-  .spread{grid-template-columns:1fr;gap:40px}
-  .stage{position:static}
-  .report-grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:24px}
-  .boundary{grid-template-columns:1fr;gap:28px}
+  .spread{grid-template-columns:1fr;gap:34px}
+  .report-grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:22px}
+  .boundary{grid-template-columns:1fr;gap:26px}
+  .extracts{grid-template-columns:1fr}
 }
 @media (max-width:600px){
   .page{padding:0 16px}
-  header{padding:40px 0 28px}
-  .lede{font-size:17px}
-  .call{grid-template-columns:48px minmax(0,1fr);gap:0 12px}
-  .q{font-size:24px}
-  .broke{grid-template-columns:1fr}
+  header{padding:30px 0 22px}
+  .lede{font-size:16.5px}
+  .result li{grid-template-columns:1fr;gap:2px}
+  .call{grid-template-columns:1fr;gap:2px}
   .report-grid{grid-template-columns:1fr;border-left:0}
-  .dept{border-right:0;border-top:1px solid var(--rule);padding:14px 0}
-  iframe{height:1900px}
-  h2{font-size:28px}
-}
-@media (prefers-reduced-motion:no-preference){
-  .frame::before,.frame::after{transition:transform .3s}
+  .dept{border-right:0;border-top:1px solid var(--rule);padding:12px 0}
+  iframe{height:2000px}
+  h2{font-size:26px}
 }
 </style>
 </head>
@@ -120,120 +139,125 @@ footer{border-top:1px solid var(--rule);padding:18px 0 40px;color:var(--pencil);
 <div class="page">
 <header>
   <h1>Paperclip <span class="nw">booking-release</span> rehearsal</h1>
-  <p class="disclaimer">Independent demonstration using synthetic data. No access to any client's code or Paperclip instance. Payments are not connected.</p>
-  <p class="lede">One small change to a private-session booking app, taken through a real Paperclip instance and a protected release on 14 October 2026: <b>a double-booking defect planted on purpose, fixed by one agent, reviewed by another, approved through the operator account, released, rolled back and released again.</b> Every step below links to its record.</p>
-  <p class="opnote">The operator role (Paperclip approvals, GitHub environment approvals and merges) was played by the build session through the operator account; no person reviewed these changes.</p>
+  <p class="lede">Three tickets on a small booking app, run through a real Paperclip instance on 14 October 2026: <b>agents fixed and reviewed, an operator account approved, a release gate held the production job, and a skipped handoff was recovered without anyone chasing it.</b></p>
+  <p class="notice"><span>Independent demonstration using synthetic data. No access to any client's code or Paperclip instance. Payments are not connected.</span><span class="op">The operator role (Paperclip approvals, GitHub environment approvals and merges) was played by the build session through the operator account; no person reviewed these changes.</span></p>
 </header>
 
-<section class="spread" aria-label="The released app and the run">
+<section class="spread" aria-label="The app and the result">
   <div class="stage">
+    <p class="build" id="build"><b>The app below is the current demo build</b>, deployed by the build session from its own machine after the recorded run, outside the release gate. The release that went through the gate was B (app code <a href="https://github.com/fred1433/booking-release-rehearsal/commit/db5931d">db5931d</a>); this build adds BOO-3 and the fixes listed in the README.</p>
     <div class="frame">
-      <iframe id="app" src="/demos/paperclip-booking-rehearsal/app/" title="Booking app, production release" loading="eager"></iframe>
+      <iframe id="app" src="/demos/paperclip-booking-rehearsal/app/" title="Booking app, current demo build" loading="eager"></iframe>
     </div>
-    <p class="caption">This frame is the production release itself, not a mock-up. A synthetic teacher in Paris, a learner in Sydney, sessions of 30, 45 or 60 minutes. <b>Try “Send both requests”:</b> the release before the fix confirmed both and double-booked the teacher; this one confirms one. Your bookings stay in your own sandbox.</p>
   </div>
 
-  <div class="book">
-    <h2>The run, call by call</h2>
-    <p class="sub">Times are UTC. Yellow is an agent, pink is the operator role (played by the build session, see above), dark is Paperclip itself, grey is the release pipeline.</p>
-    <ol class="calls">
-      <li class="call"><div class="q">1<small>13:33</small></div><div>
-        <p class="what"><span class="who op">Operator</span><strong>The requirement is written before any fix.</strong></p>
-        <p class="detail">A test file says a 30-minute session cannot start inside a 60-minute one and that simultaneous requests confirm at most one. On the baseline it fails 5 of its 6 cases. <a href="https://github.com/fred1433/paperclip-booking-rehearsal/actions/runs/38575163046">Red test run</a> (recorded at 13:50, when the commit was first pushed), commit <a href="https://github.com/fred1433/paperclip-booking-rehearsal/commit/259df74e29a3f1e3df7b795cf06692a67b02977b">259df74</a>.</p>
-      </div></li>
-      <li class="call"><div class="q">2<small>13:34</small></div><div>
-        <p class="what"><span class="who op">Operator</span><strong>Ticket BOO-1 opens in Paperclip, owned by the Implementer.</strong></p>
-        <p class="detail">The ticket carries the repository, base commit, acceptance criteria, test command, constraints and next action. Its execution policy sends finished work to the Reviewer agent, then to the operator user for approval.</p>
-      </div></li>
-      <li class="call"><div class="q">3<small>13:34</small></div><div>
-        <p class="what"><span class="who agent">Implementer</span><strong>Moves the overlap check inside the write.</strong></p>
-        <p class="detail">One conditional INSERT instead of a read followed by a write, so two requests can no longer both pass. No schema change, which keeps a rollback safe. Commit <a href="https://github.com/fred1433/paperclip-booking-rehearsal/commit/13e650970474c7b98270d233efee21b9288a3db2">13e6509</a>, 22 of 22 tests. It marks the ticket done; Paperclip turns that into “in review”.</p>
-      </div></li>
-      <li class="call"><div class="q">4<small>13:37</small></div><div>
-        <p class="what"><span class="who paperclip">Paperclip</span><strong>The handoff to review stalls.</strong></p>
-        <p class="detail">The Reviewer's wake-up was skipped because the Implementer's run had not yet released its workspace lease (it did, 81 milliseconds later). Nothing retried it. The ticket read “in review” while nobody worked on it.</p>
-        <p class="note">Noticed by the operator six minutes later, from the wake-up log, not from the board.</p>
-      </div></li>
-      <li class="call"><div class="q">5<small>13:44</small></div><div>
-        <p class="what"><span class="who op">Operator</span><strong>Wakes the Reviewer by hand.</strong></p>
-        <p class="detail">An unplanned intervention, recorded as one.</p>
-      </div></li>
-      <li class="call"><div class="q">6<small>13:46</small></div><div>
-        <p class="what"><span class="who agent">Reviewer</span><strong>Approves, with its own evidence.</strong></p>
-        <p class="detail">Reran the tests, swept all 81 combinations of lengths and offsets, fired 300 rounds of 12 concurrent overlapping requests: no overlap. It left one non-blocking note. It asked for no changes, so no delivery was refused in this run.</p>
-      </div></li>
-      <li class="call"><div class="q">7<small>13:49</small></div><div>
-        <p class="what"><span class="who op">Operator</span><strong>Approved in Paperclip by the operator account.</strong></p>
-        <p class="detail">After the session's own checks: tests on a fresh checkout, five race rounds against a local D1 database (one booking confirmed each time), and the same race against the old release on staging (three of three rounds double-booked). The decision comment lists what was inspected.</p>
-      </div></li>
-      <li class="call"><div class="q">8<small>13:50</small></div><div>
-        <p class="what"><span class="who ci">Pipeline</span><strong>Pull request merged, tested, deployed to staging.</strong></p>
-        <p class="detail"><a href="https://github.com/fred1433/paperclip-booking-rehearsal/pull/1">Pull request #1</a>, release B, <a href="https://github.com/fred1433/paperclip-booking-rehearsal/commit/db5931d1e5d82aea2967cbce51aee081571cb3fd">db5931d</a> (deployed as 7e4de34 before a later history rewrite, same app code). Staging smoke test passed.</p>
-      </div></li>
-      <li class="call"><div class="q">9<small>13:51</small></div><div>
-        <p class="what"><span class="who ci">Pipeline</span><strong>Production waits for its own approval.</strong></p>
-        <p class="detail">The earlier release had been approved at 13:39; that approval covered its run only. The production job, held by the protected environment's approval gate, does not start. At 13:39 a first request had been rejected on purpose, and nothing was deployed.</p>
-      </div></li>
-      <li class="call"><div class="q">10<small>13:52</small></div><div>
-        <p class="what"><span class="who op">Operator</span><strong>Approved by the operator account. The fix is live.</strong></p>
-        <p class="detail"><a href="https://github.com/fred1433/paperclip-booking-rehearsal/actions/runs/38575241258">Release run</a>. Five race rounds on production: one booking confirmed each time.</p>
-      </div></li>
-      <li class="call"><div class="q">11<small>13:55</small></div><div>
-        <p class="what"><span class="who op">Operator</span><strong>Rollback to the previous release.</strong></p>
-        <p class="detail">Approved through the same gate. The drill bookings made before and after the fix were all still there. With the old code back, the race double-booked again, as expected.</p>
-        <p class="note">The first rollback attempt failed: rolling back the app had also rolled back the release scripts, including an old smoke-test bug. The workflow now takes its tooling from itself, not from the release.</p>
-      </div></li>
-      <li class="call"><div class="q">12<small>13:57</small></div><div>
-        <p class="what"><span class="who op">Operator</span><strong>Forward to the fix again.</strong></p>
-        <p class="detail">Five drill bookings intact, made under the old release, the fix, and the old release again. <a href="https://github.com/fred1433/paperclip-booking-rehearsal/actions/runs/38576054136">Release run</a>.</p>
-      </div></li>
-      <li class="call"><div class="q">13<small>13:59</small></div><div>
-        <p class="what"><span class="who op">Operator</span><strong>A worker is killed mid-task, on purpose.</strong></p>
-        <p class="detail">On a second ticket, BOO-2 (tests around the Paris clock change), the Implementer's process was killed while it was writing. Paperclip marked the run failed and retried it on its own, about 40 seconds later. The retry found the half-written file, finished it and corrected one wrong expectation. Reviewed, approved, <a href="https://github.com/fred1433/paperclip-booking-rehearsal/pull/2">pull request #2</a>.</p>
-        <p class="note">The handoff to review stalled again, the same way, 43 milliseconds apart. Two handoffs, two stalls.</p>
-      </div></li>
+  <div>
+    <h2>The result</h2>
+    <ul class="result">
+      <li><span class="k">Held</span><div><p>Paperclip enforced review and approval on all three tickets. Overlapping requests confirm one booking, at the write. A lost reply retried with the same key returns the original booking.</p><p>Try “Send both requests” in the app: one 201, one 409.</p></div></li>
+      <li><span class="k">Gate</span><div><p>The production job waited for an approval tied to its run and commit; a rejected request deployed nothing.</p><p>Not proven: the staging job held the same account-wide deploy token without a reviewer, so not every production-capable credential was behind the gate.</p></div></li>
+      <li><span class="k">Rollback</span><div><p>A → B → A → B kept all five drill bookings. Schema-compatible, not booking-safe: with the old code back, the race double-booked again.</p></div></li>
+    </ul>
+
+    <div class="handoffs" id="handoffs">
+      <h3>Every handoff to the reviewer stalled</h3>
+      <ol>
+        <li><b>BOO-1</b>: wake-up skipped, lease released 81 ms later. Re-woken by hand after 6 minutes.</li>
+        <li><b>BOO-2</b>: same, 43 ms. Re-woken by hand.</li>
+        <li><b>BOO-3</b>: same, 95 ms. <b>Recovered by a reconciler running beside Paperclip</b>: one wake-up 11 seconds after the handoff, one review run, no second reviewer. Its fallback, one blocker issue if the retry starts nothing, is unit-tested only.</li>
+      </ol>
+    </div>
+
+    <ol class="phases" aria-label="Phases">
+      <li><div><b>Requirement first.</b> <span>Each ticket starts from a test that fails on main.</span></div></li>
+      <li><div><b>Implementation in Paperclip.</b> <span>The Implementer works in an isolated container and commits on a branch.</span></div></li>
+      <li><div><b>Review, then approval.</b> <span>The Reviewer approved all three without changes; the operator user approved after its own checks.</span></div></li>
+      <li><div><b>Release.</b> <span>Commits leave the container as a bundle; tests, staging, then production behind the gate.</span></div></li>
+      <li><div><b>Rollback drill.</b> <span>Through the same gate, with bookings kept.</span></div></li>
     </ol>
+
+    <div class="next">
+      <p><b>On an existing setup, the first 48 hours</b> would preserve before changing:</p>
+      <ol>
+        <li>agree what “launched” means and who decides releases; inventory versions, open work, skipped wake-ups and the real deployment path, read-only;</li>
+        <li>walk the booking journey in a test environment and rank the blockers with evidence;</li>
+        <li>take one blocker through the existing flow, adding only the missing controls.</li>
+      </ol>
+      <a class="cta" href="https://cal.theaipipe.com">Book a 15-minute call</a>
+    </div>
   </div>
 </section>
 
-<section class="report" aria-labelledby="report-title">
-  <h2 id="report-title">Rehearsal report</h2>
-  <p class="sub">Where the operator role was still needed, counted from the record. That role was played by the build session, not by a person.</p>
-  <div class="report-grid">
-    <div class="dept"><h3>Ticket to production</h3><span class="fig">17 min</span><p>BOO-1 opened at 13:34:45, the fix live at 13:52:15.</p></div>
-    <div class="dept"><h3>Operator decisions</h3><span class="fig">7</span><p>Two approvals in Paperclip; five in the release gate, one of them a deliberate rejection.</p></div>
-    <div class="dept"><h3>Unplanned interventions</h3><span class="fig">4</span><p>Two in Paperclip, both stalled handoffs; two in the release scripts, both caught by the pipeline or the drill.</p></div>
-    <div class="dept"><h3>Questions to rebuild context</h3><span class="fig">0</span><p>Neither agent asked the operator anything. The ticket held what they needed.</p></div>
+<details id="trace">
+  <summary>The full trace, call by call<small>Times UTC, from git, GitHub and Paperclip timestamps. Yellow is an agent, pink is the operator role, dark is Paperclip, green is the reconciler, grey is the pipeline.</small></summary>
+  <ol class="calls">
+    <li class="call"><div class="q">13:33</div><div><p class="what"><span class="who op">Operator</span><strong>Requirement written before any fix.</strong></p><p class="detail">On top of the baseline (<a href="https://github.com/fred1433/booking-release-rehearsal/commit/1d8db4b">1d8db4b</a>), a test says a 30-minute session cannot start inside a 60-minute one and that simultaneous requests confirm at most one: <a href="https://github.com/fred1433/booking-release-rehearsal/commit/259df74">259df74</a>, failing 5 of 6 cases. The red CI run was recorded at 13:50, when the commit was first pushed.</p></div></li>
+    <li class="call"><div class="q">13:34</div><div><p class="what"><span class="who op">Operator</span><strong>BOO-1 opens in Paperclip, owned by the Implementer.</strong></p><p class="detail">Repository, base commit, acceptance criteria, test command, constraints, next action. Review by the Reviewer agent, then approval by the operator user. <a href="#x-ticket">Extract</a></p></div></li>
+    <li class="call"><div class="q">13:37</div><div><p class="what"><span class="who agent">Implementer</span><strong>Moves the overlap check inside the write.</strong></p><p class="detail">One conditional INSERT; no schema change. <a href="https://github.com/fred1433/booking-release-rehearsal/commit/13e6509">13e6509</a>, 22 of 22 tests. Meanwhile the booking page (<a href="https://github.com/fred1433/booking-release-rehearsal/commit/37d56fd">37d56fd</a>, release A) is built on main by the operator session.</p></div></li>
+    <li class="call"><div class="q">13:37</div><div><p class="what"><span class="who paperclip">Paperclip</span><strong>The handoff to review stalls.</strong></p><p class="detail">Wake-up skipped: the previous run had not released its workspace lease (81 ms later). Nothing retried. <a href="#x-skip">Extract</a></p></div></li>
+    <li class="call"><div class="q">13:39</div><div><p class="what"><span class="who op">Operator</span><strong>Release A: a first request rejected, nothing deployed; then approved.</strong></p><p class="detail">A live at 13:40:02. The smoke step failed on a bug in the operator's own script, fixed at 13:40.</p></div></li>
+    <li class="call"><div class="q">13:44</div><div><p class="what"><span class="who op">Operator</span><strong>Wakes the Reviewer by hand.</strong></p></div></li>
+    <li class="call"><div class="q">13:46</div><div><p class="what"><span class="who agent">Reviewer</span><strong>Approves.</strong></p><p class="detail">Reran the tests, swept 81 combinations, and reported 300 rounds of 12 concurrent requests on the local SQLite stand-in (not production). <a href="#x-review">Extract</a></p></div></li>
+    <li class="call"><div class="q">13:49</div><div><p class="what"><span class="who op">Operator</span><strong>Approved in Paperclip through the operator account.</strong></p><p class="detail">After the session's checks: fresh-checkout tests, five race rounds on a local D1, the same race against release A on staging (three of three double-booked). <a href="#x-approval">Extract</a></p></div></li>
+    <li class="call"><div class="q">13:52</div><div><p class="what"><span class="who op">Operator</span><strong>Release B through the gate.</strong></p><p class="detail">Merged at 13:50:34; production waited for its own approval although A had been approved; live at 13:52:15; five production race rounds, one booking each.</p></div></li>
+    <li class="call"><div class="q">13:55</div><div><p class="what"><span class="who op">Operator</span><strong>Rollback to A, then forward to B at 13:57.</strong></p><p class="detail">All five drill bookings kept.</p><p class="note">The first rollback failed: rolling back the app also rolled back the release scripts. The workflow now takes its tooling from itself.</p></div></li>
+    <li class="call"><div class="q">13:59</div><div><p class="what"><span class="who op">Operator</span><strong>BOO-2: a worker killed mid-task, on purpose.</strong></p><p class="detail">Paperclip retried on its own about 40 seconds later; the retry finished the half-written file. The handoff stalled again (43 ms); re-woken by hand. <a href="#x-retry">Extract</a></p></div></li>
+    <li class="call"><div class="q">14:50</div><div><p class="what"><span class="who op">Operator</span><strong>Deploy secrets removed from GitHub.</strong></p><p class="detail">Everything deployed since then was deployed locally, outside the gate.</p></div></li>
+    <li class="call"><div class="q">14:56</div><div><p class="what"><span class="who op">Operator</span><strong>BOO-3: two defects found by an external review.</strong></p><p class="detail">A retry after the one-hour cutoff was refused; concurrent requests could pass the 40-booking sandbox limit. Requirement test first (3 of 4 cases failing).</p></div></li>
+    <li class="call"><div class="q">14:59</div><div><p class="what"><span class="who agent">Implementer</span><strong>Splits validation; puts the limit in the same write.</strong></p><p class="detail"><a href="https://github.com/fred1433/booking-release-rehearsal/commit/f62a312">f62a312</a>, 34 of 34 tests. The handoff stalls a third time (95 ms).</p></div></li>
+    <li class="call"><div class="q">15:00</div><div><p class="what"><span class="who rec">Reconciler</span><strong>Wakes the Reviewer once, 11 seconds after the handoff.</strong></p><p class="detail">No active run, no held lease. One review run started 0.1 s later. <a href="#x-reconciler">Extract</a></p></div></li>
+    <li class="call"><div class="q">15:03</div><div><p class="what"><span class="who agent">Reviewer</span><strong>Approves; approved in Paperclip through the operator account at 15:03:30.</strong></p><p class="detail">Merged locally (<a href="https://github.com/fred1433/booking-release-rehearsal/commit/609943a">609943a</a>) and deployed locally, outside the gate.</p></div></li>
+  </ol>
+</details>
+
+<details id="extracts">
+  <summary>Read the record<small>Short extracts from the exported Paperclip record, trimmed; the full text is in the record.</small></summary>
+  <div class="extracts">
+    <div class="extract" id="x-ticket"><h3>Ticket BOO-1</h3><p class="src">issues[BOO-1].description</p><blockquote>## Context
+- Repository: `/work/booking` (git). Work on branch `fix/overlap`. Base: `main` at `1d8db4b`.
+- Commit `259df74` on this branch adds `app/tests/overlap.test.js`, which fails today. This is a seeded exercise: the defect was planted on purpose for this rehearsal.</blockquote></div>
+    <div class="extract" id="x-skip"><h3>Skipped wake-up</h3><p class="src">wakeupRequests, 13:37:53.250 (lease released 13:37:53.331)</p><blockquote>reason: execution_reconciliation_required
+status: skipped
+error: The previous execution has not released its environment lease. Wait for cleanup before continuing this task.</blockquote></div>
+    <div class="extract" id="x-review"><h3>Review decision, BOO-1</h3><p class="src">executionDecisions, review, 13:46:10</p><blockquote>Approved, every criterion met, verified independently. Reviewed `1d8db4b..13e6509` on `fix/overlap`. Diff is two files: `app/src/booking.js` and the new `app/tests/overlap.test.js`.</blockquote></div>
+    <div class="extract" id="x-approval"><h3>Approval decision, BOO-1</h3><p class="src">executionDecisions, approval, 13:49:32, operator user</p><blockquote>Operator decision: approve 13e6509 for release. What I inspected before deciding: the diff 259df74..13e6509 (one file); the overlap test is inside the INSERT ... SELECT ... WHERE NOT EXISTS; no schema change.</blockquote></div>
+    <div class="extract" id="x-retry"><h3>Automatic retry, BOO-2</h3><p class="src">wakeupRequests, 13:59:21.997</p><blockquote>reason: transient_failure_retry
+(the killed run failed at 13:59:21; the retry run started at 14:00:03)</blockquote></div>
+    <div class="extract" id="x-reconciler"><h3>Reconciler comment, BOO-3</h3><p class="src">issues[BOO-3].comments, 15:00:00.970, operator account</p><blockquote>Handoff reconciler: the review stage is pending for this agent, but no review run started after the handoff (last run finished 2026-10-14T14:59:49.592Z, no active run, no held lease). Woke the reviewer once.</blockquote></div>
   </div>
-  <div class="broke">
-    <div><h3>A handoff can fail without saying so</h3><p>Paperclip enforced the review and the approval stage every time, but both handoffs to the reviewer were skipped and left a ticket looking busy while idle. <b>Watching for skipped wake-ups is part of running it.</b></p></div>
-    <div><h3>Approval is per run, and the run is per commit</h3><p>The release workflow resolves one commit, tests it and deploys only that commit after approval. Approving the old release did not let the fix through: the fix waited for its own approval.</p></div>
-    <div><h3>Rollback covers code, not data</h3><p>Bookings survived both directions because the fix needed no schema change. <b>Not shown:</b> restoring the database, undoing external side effects, or rechecking bookings taken while the old code was back.</p></div>
-    <div><h3>Agents ran in a box</h3><p>Paperclip and both agents ran in a container holding only this repository: no deploy key, no GitHub credentials, no access to the host machine. Commits left the box only through the operator role.</p></div>
+</details>
+
+<section class="report" aria-labelledby="report-title">
+  <h2 id="report-title">Where the operator role was still needed</h2>
+  <p class="sub">Counted from the record. That role was played by the build session, so these are interventions, not hours of human effort.</p>
+  <div class="report-grid">
+    <div class="dept"><h3>Ticket to production</h3><span class="fig">17.5 min</span><p>BOO-1, one seeded ticket: opened 13:34:45, live 13:52:15. Not a delivery average.</p></div>
+    <div class="dept"><h3>Approvals and rejections</h3><span class="fig">8</span><p>Three in Paperclip; five at the release gate, one a deliberate rejection. Plus one merge on GitHub.</p></div>
+    <div class="dept"><h3>Manual re-wakes</h3><span class="fig">2 → 0</span><p>BOO-1 and BOO-2 needed one each; BOO-3 was recovered by the reconciler.</p></div>
+    <div class="dept"><h3>Questions to rebuild context</h3><span class="fig">0</span><p>Neither agent asked the operator anything. The ticket held what they needed.</p></div>
   </div>
 </section>
 
 <section class="boundary" aria-labelledby="boundary-title">
   <div>
-    <h2 id="boundary-title">What Paperclip did, and what was done beside it</h2>
-    <p>In this exercise Paperclip handled ownership, assignment, execution state, the review stage and the approval stage held by the operator user. Application correctness, deployment authorisation, smoke tests and data recovery were implemented or configured separately, in the code and in a protected GitHub environment.</p>
-    <p class="quiet">The gate held the production job, not the only key: the staging job deployed on every push to main with the same account-wide Cloudflare token and no reviewer. Both deploy secrets were removed from the GitHub environments after the run (14:50 UTC); later corrections to this page and the app were deployed by the build session from its own machine.</p>
-    <p class="quiet">Set up outside Paperclip and declared in the repository: the baseline app, the seeded test, the release pipeline, the container, moving commits from the container to GitHub, the pull request and the release approvals. Paperclip 2026.1012.0 (commit bba6a45), claude_local adapter on the CLI engine, Claude Code 2.1.299.</p>
-    <p class="quiet">Not covered: requesting a time, payments, more than one currency, notifications. No incremental model API charges during this recorded run: the agents used an existing paid Claude Code subscription with extra usage turned off, checked before and after.</p>
+    <h2 id="boundary-title">What Paperclip did, and what was built beside it</h2>
+    <p>Paperclip handled ownership, assignment, execution state, the review stage and the approval stage held by the operator user. Beside it: correctness in the code, the release gate, smoke tests, the rollback drill and the handoff reconciler. Existing bookings stayed readable across every code deployment; database restore was not exercised.</p>
+    <p class="quiet">This rehearsal shows hands-on work with Paperclip on a small, synthetic slice. It does not show prior operation in a real business, a measured reduction in staff supervision, or a marketplace launch.</p>
+    <p class="quiet">Paperclip 2026.1012.0 (commit bba6a45), claude_local on the CLI engine, Claude Code 2.1.299, in a container with only the demo repository. No incremental model API charges during these recorded runs: an existing paid Claude Code subscription, extra usage turned off, checked before and after. The working repository is private now; its GitHub runs, approvals and deployments are exported in the public repository.</p>
   </div>
   <div>
     <ul class="docs">
-      <li><a href="https://github.com/fred1433/paperclip-booking-rehearsal"><b>Repository</b><span>Code, tests, release pipeline, the full story in the README</span></a></li>
-      <li><a href="https://github.com/fred1433/paperclip-booking-rehearsal/blob/main/evidence/paperclip-record.json"><b>Exported Paperclip record</b><span>Tickets, comments, runs, wake-ups, decisions; read-only, secrets scrubbed</span></a></li>
-      <li><a href="https://github.com/fred1433/paperclip-booking-rehearsal/blob/main/PLAYBOOK.md"><b>Playbook</b><span>How a team runs the next ticket this way, in plain English</span></a></li>
-      <li><a href="https://github.com/fred1433/paperclip-booking-rehearsal/blob/main/docs/FIRST_48_HOURS.md"><b>The first 48 hours</b><span>Joining an existing setup: preserve, diagnose, then one blocker</span></a></li>
-      <li><a href="https://github.com/fred1433/paperclip-booking-rehearsal/blob/main/docs/LAUNCH_NOTES.md"><b>Launch questions</b><span>What a booking launch has to answer, from the public preview only</span></a></li>
+      <li><a href="https://github.com/fred1433/booking-release-rehearsal"><b>Repository</b><span>Code, tests, reconciler, the full story in the README</span></a></li>
+      <li><a href="https://github.com/fred1433/booking-release-rehearsal/blob/main/evidence/paperclip-record.json"><b>Paperclip record</b><span>Tickets, comments, runs, wake-ups, decisions, leases</span></a></li>
+      <li><a href="https://github.com/fred1433/booking-release-rehearsal/blob/main/evidence/github/github-record.json"><b>GitHub record</b><span>Runs, approvals and deployments from the working repository</span></a></li>
+      <li><a href="https://github.com/fred1433/booking-release-rehearsal/blob/main/PLAYBOOK.md"><b>Playbook</b><span>How a team runs the next ticket this way</span></a></li>
+      <li><a href="https://github.com/fred1433/booking-release-rehearsal/blob/main/docs/FIRST_48_HOURS.md"><b>The first 48 hours</b><span>Joining an existing setup in detail</span></a></li>
+      <li><a href="https://github.com/fred1433/booking-release-rehearsal/blob/main/docs/LAUNCH_NOTES.md"><b>Launch questions</b><span>What a booking launch has to answer, from a public preview only</span></a></li>
     </ul>
-    <p class="sign">Frédéric, The AI Pipe. <a href="https://cal.theaipipe.com">Book a 15-minute call</a></p>
   </div>
 </section>
 
-<footer>Synthetic teacher, synthetic bookings, simulated prices in Australian dollars. Approvals and merges were given through the operator account by the build session; no person reviewed these changes.</footer>
+<footer>Synthetic teacher, synthetic bookings, simulated prices in Australian dollars. Frédéric, The AI Pipe.</footer>
 </div>
 <script>
 (() => {
@@ -244,12 +268,11 @@ footer{border-top:1px solid var(--rule);padding:18px 0 40px;color:var(--pencil);
       const m = d.querySelector('main');
       const h = m ? m.offsetHeight : d.body.scrollHeight;
       if (h > 200) f.style.height = (h + 4) + 'px';
-    } catch (e) { /* cross-origin or not ready: keep the fixed height */ }
+    } catch (e) { /* not ready: keep the fixed height */ }
   };
-  f.addEventListener('load', () => {
-    fit();
-    try { new ResizeObserver(fit).observe(f.contentDocument.body); } catch (e) {}
-  });
+  f.addEventListener('load', () => { fit(); try { new ResizeObserver(fit).observe(f.contentDocument.body); } catch (e) {} });
+  // Opening an extract link inside the closed trace opens the extracts first.
+  document.querySelectorAll('a[href^="#x-"]').forEach((a) => a.addEventListener('click', () => { document.getElementById('extracts').open = true; }));
 })();
 </script>
 </body>

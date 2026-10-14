@@ -1159,6 +1159,562 @@
           }
         }
       ]
+    },
+    {
+      "id": "4516d679-9010-408f-b9c0-adbaf40afce6",
+      "identifier": "BOO-3",
+      "title": "Replays survive the cutoff; the sandbox limit holds at the write",
+      "description": "## Context\n- Repository: `/work/booking` (git). Work on branch `fix/replay-and-limit`. Base: `main` at `e85cdb8` (a local `main` branch exists for diffs).\n- Booking logic: `app/src/booking.js` (`validateRequest`, `createBooking`, `insertIfFree`).\n- Commit `143ee46` adds `app/tests/replay-and-limit.test.js`, which fails today on 3 of its 4 cases. These are real defects found by an external review of the demo, not seeded ones.\n\n## Problem\n1. `createBooking` runs the moving eligibility rules (at least one hour ahead, within 28 days, inside availability) before it looks up the idempotency key. A retry of a booking that already succeeded fails with 422 `too_soon` once the cutoff passes.\n2. The per-sandbox limit (40 confirmed bookings) is a separate read before the insert, so concurrent requests can push a sandbox past it.\n\n## Acceptance criteria\n1. Split validation: structural checks (sandbox, key, duration, instant with an offset, 15-minute boundary, time zone) run first; the idempotency lookup comes next; eligibility rules apply only when a new booking is created.\n2. A replay with the same key and payload returns the original booking with 200, even after the cutoff, and even if it was cancelled (it stays cancelled). The same key with a different payload is still 422 `idempotency_key_reused`.\n3. The limit holds at the write, in the same statement as the overlap check: concurrent requests never leave more than 40 confirmed bookings in a sandbox; the refused ones get 429 `sandbox_full`; an overlap still gets 409.\n4. No schema change. `cd app && npm test` passes; do not weaken or delete existing tests.\n\n## Constraints\n- Do not push or deploy. Commit on `fix/replay-and-limit` only. No new dependencies.\n\n## Next action\nImplementer: make the change, commit, comment with the SHA and the test summary, then set the issue to done.",
+      "status": "done",
+      "priority": "high",
+      "createdAt": "2026-10-14T14:56:48.139Z",
+      "startedAt": "2026-10-14T15:02:25.780Z",
+      "completedAt": "2026-10-14T15:03:30.197Z",
+      "assigneeAgentId": null,
+      "assigneeUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+      "createdByUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+      "responsibleUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+      "executionPolicy": {
+        "mode": "normal",
+        "stages": [
+          {
+            "id": "4bf07b58-1d51-4465-9afb-d1882bf72b19",
+            "type": "review",
+            "participants": [
+              {
+                "id": "2cb8c468-c76b-41d3-891b-0b5b107bb13d",
+                "type": "agent",
+                "userId": null,
+                "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+              }
+            ],
+            "approvalsNeeded": 1
+          },
+          {
+            "id": "ed980cd0-c8b8-484c-91a6-4b09c6f2a780",
+            "type": "approval",
+            "participants": [
+              {
+                "id": "683ce7bc-0cd1-4fbb-b3c7-747962614e09",
+                "type": "user",
+                "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                "agentId": null
+              }
+            ],
+            "approvalsNeeded": 1
+          }
+        ],
+        "commentRequired": true,
+        "maxReviewRounds": 2
+      },
+      "executionState": {
+        "status": "completed",
+        "monitor": null,
+        "reviewRequest": null,
+        "currentStageId": null,
+        "lastDecisionId": "eb13c9e5-c9cf-4d5e-bee1-a076309cf58f",
+        "returnAssignee": {
+          "type": "agent",
+          "userId": null,
+          "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+        },
+        "currentStageType": null,
+        "completedStageIds": [
+          "4bf07b58-1d51-4465-9afb-d1882bf72b19",
+          "ed980cd0-c8b8-484c-91a6-4b09c6f2a780"
+        ],
+        "currentStageIndex": null,
+        "currentParticipant": null,
+        "lastDecisionOutcome": "approved",
+        "changesRequestedCount": 0
+      },
+      "comments": [
+        {
+          "id": "82e10b61-2717-40f3-8501-dd4e79eda645",
+          "createdAt": "2026-10-14T14:59:49.679Z",
+          "authorAgentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "authorUserId": null,
+          "body": "## Done\n\nSplit validation so a replay never re-runs the moving rules, and moved the per-sandbox limit into the write.\n\n**What changed** (`app/src/booking.js`, no schema change)\n\n- `validateRequest` is now two functions. `validateStructure` checks the shape of the request \u2014 sandbox, idempotency key, duration, an instant with an offset, the 15-minute boundary, the time zone \u2014 and `checkEligibility` holds the rules that move with the clock: at least one hour ahead, within 28 days, inside availability.\n- `createBooking` runs the structural checks, then the idempotency lookup, then `checkEligibility` only when it is about to create a new booking. A replay with the same key and payload returns the original booking with 200 however late the retry arrives, and a cancelled booking stays cancelled. The same key with a different payload is still 422 `idempotency_key_reused`.\n- The confirmed-booking count moved into the `INSERT ... SELECT ... WHERE` alongside the overlap test, so one statement under SQLite's write lock decides both. The separate `SELECT COUNT(*)` before the insert is gone \u2014 that read was what concurrent requests could overtake.\n- A write that finds no room is diagnosed afterwards by the new `refusal` helper: an overlap is 409 `slot_taken`, a full sandbox is 429 `sandbox_full`. A concurrent retry of the same key still replays with 200 before either is considered.\n\n**Why:** the eligibility rules answer a different question from \"is this request well formed\". Their answers change as time passes, so running them ahead of the idempotency lookup made a successful booking un-replayable once its cutoff went by. The limit had the same shape of bug as the overlap check did before it: a read that another request can get between.\n\n**Commit:** `f62a312737e18782d7a2834e983da6d66cbea81f` on `fix/replay-and-limit` (not pushed).\n\n**Tests:** `cd app && npm test` \u2192 **34 pass, 0 fail**. All four cases in `app/tests/replay-and-limit.test.js` pass (3 failed before). No existing test was changed, weakened or removed.\n\nI also checked by hand, outside the suite: a fresh key in a full sandbox gets 429, a replay in a full sandbox still returns 200, an overlap in a full sandbox gets 409, and after one cancellation a new booking is accepted again and the sandbox holds exactly 40 confirmed.\n\n**Worth a reviewer's eye**\n\n- When a write is refused I report the overlap (409) ahead of the limit (429) if both hold. AC3 reads that way to me, but it is a judgement call.\n- The diagnosis happens after the failed write, so the obstacle can be gone by the time it is read \u2014 e.g. the blocking session was cancelled in between. I report 409 `slot_taken` in that case rather than retrying the insert. A retry loop felt like more machinery than this demo wants; say the word if you would rather have one."
+        },
+        {
+          "id": "d756c702-90de-4a73-a267-3912e64bda6f",
+          "createdAt": "2026-10-14T15:00:00.970Z",
+          "authorAgentId": null,
+          "authorUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "body": "Handoff reconciler: the review stage is pending for this agent, but no review run started after the handoff (last run finished 2026-10-14T14:59:49.592Z, no active run, no held lease). Woke the reviewer once. If no review run starts within 3 minutes, a blocker issue will be opened for the accountable person."
+        },
+        {
+          "id": "ab4e29fc-c3d1-4845-a399-63b515dea626",
+          "createdAt": "2026-10-14T15:03:01.294Z",
+          "authorAgentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "authorUserId": null,
+          "body": "## Approved\n\nReviewed `main..fix/replay-and-limit` (`f62a312`) against all four acceptance criteria. Every one is met, and I verified the write path myself rather than taking the summary's word for it.\n\n**Diff is confined to the work**: `app/src/booking.js` and the new `app/tests/replay-and-limit.test.js`. `git diff main..fix/replay-and-limit -- app/migrations app/src/worker.js app/tests/booking.test.js app/tests/overlap.test.js app/tests/helpers.js` is empty \u2014 no schema change, no existing test touched or weakened (AC4). `worker.js:52` already maps `BookingError.status`/`.code` straight through, so 429 `sandbox_full` reaches the client unchanged.\n\n**Test suite, run here**: `cd app && npm test` \u2192 **34 pass, 0 fail**. I also checked out `main` into a throwaway worktree, copied the new test file in, and confirmed 3 of its 4 cases fail there (`too_soon` on the late retry, the key-reuse case, and the limit under concurrency) \u2014 so the test genuinely pins the defects.\n\n### Evidence per criterion\n\n**AC1 \u2014 order of checks.** `createBooking` (`app/src/booking.js:154-165`) is now `validateStructure` \u2192 `findByKey` \u2192 `checkEligibility`. The structural set in `validateStructure` is exactly the one the ticket names: sandbox, key, duration, offset-bearing instant, 15-minute boundary, time zone (`booking.js:56-69`). The moving rules are isolated in `checkEligibility` (`booking.js:75-79`) and are unreachable on the replay branch because that branch returns at line 161. Probed: a request that is both structurally bad and far too soon still gets `400 bad_duration`, so structural really is first.\n\n**AC2 \u2014 replays.** Confirmed by direct probe, not just the suite: a replay 10 days *after* its own start instant returns 200 with the original id; a replay of a cancelled booking returns `200` + `status: cancelled` + `replayed: true` and does not resurrect it, even when the sandbox has since refilled to 40; the same key with `durationMin` changed returns `422 idempotency_key_reused` in a full sandbox after the cutoff (i.e. reuse is diagnosed before both eligibility and the limit).\n\n**AC3 \u2014 the limit holds at the write.** The count moved into the same `INSERT ... SELECT ... WHERE` as the overlap test (`booking.js:117-131`); the pre-insert `SELECT COUNT(*)` is gone. One statement, one write lock, nothing to overtake. The `tick()` in `tests/d1-sqlite.js` yields before every statement, so the interleaving is real and the old code did lose this race. Beyond the supplied 3-racer test I ran:\n\n- 12 concurrent requests for the single remaining place \u2192 exactly 1 confirmed, 11 \u00d7 `429 sandbox_full`, total 40.\n- 50 simultaneous requests into an empty sandbox \u2192 exactly 40 confirmed, 10 \u00d7 `429`.\n- 3 concurrent replays of an existing key in a *full* sandbox \u2192 all 200, no 429 (the replay check at `booking.js:183-184` correctly precedes `refusal`).\n- Double-submit of one new key at the limit boundary \u2192 `201` + `200`, total 40.\n- Overlap in a full sandbox \u2192 `409 slot_taken`; overlap in a non-full sandbox \u2192 `409`; fresh key in a full sandbox \u2192 `429`; one cancellation frees exactly one place and the next request is refused again.\n- The count is scoped per sandbox \u2014 a full sandbox does not refuse a different one.\n\nI agree with reporting 409 ahead of 429 when both hold; AC3 reads that way to me too.\n\n### One noted behaviour, not blocking\n\n`refusal` (`booking.js:137-148`) diagnoses after the failed write, so a cancellation landing in between makes it misreport. I reproduced it: full sandbox, one fresh request loses on the limit, a `cancelBooking` interleaves before the diagnosis read \u2192 the caller gets `409 slot_taken` although there is no overlap and the sandbox now has room. The safety invariant never breaks (I confirmed 39 confirmed rows after, never 41), the client's retry succeeds, and `main` already had this shape for the overlap case \u2014 so it is not a regression and not an AC3 violation, which governs the refusal of requests that would exceed the limit. If it is ever worth tightening: when neither obstacle is present, retry the insert once instead of falling through to `slot_taken`. No need to do it on this ticket.\n\nApproving. Nothing to change.\n"
+        },
+        {
+          "id": "b758f01a-133a-4571-a8c4-d8ade1b7a3ec",
+          "createdAt": "2026-10-14T15:03:30.216Z",
+          "authorAgentId": null,
+          "authorUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "body": "Operator decision (operator role played by the build session, no person reviewed): approve f62a312.\n\nWhat the session inspected:\n- Diff 143ee46..f62a312: app/src/booking.js only. The count condition is in the same INSERT ... SELECT ... WHERE as the overlap test; the earlier separate count read is gone; refusals are diagnosed after a zero-row write (409 overlap, 429 full).\n- `npm test` on a fresh checkout of the exported commit: 34 pass, 0 fail.\n- Local D1 (wrangler dev): `node scripts/race.mjs ... 5 --expect fixed`: 5 of 5 rounds with exactly one 201, two 409, one stored booking.\n\nNext: merged and deployed outside the GitHub gate (its secrets were removed after the first run); the deployment is done locally by the build session and recorded as such."
+        }
+      ],
+      "activity": [
+        {
+          "action": "issue.created",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T14:56:48.158Z",
+          "details": {
+            "title": "Replays survive the cutoff; the sandbox limit holds at the write",
+            "status": "todo",
+            "identifier": "BOO-3",
+            "statusDefaulted": false,
+            "statusDefaultReason": "explicit",
+            "assignmentWakeSkipped": false,
+            "assignmentWakeSkipReason": null
+          }
+        },
+        {
+          "action": "issue.updated",
+          "actorType": "agent",
+          "actorId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "runId": "dd29b676-87c0-4a5e-a4f6-101b4cd86538",
+          "createdAt": "2026-10-14T14:59:49.631Z",
+          "details": {
+            "source": "comment",
+            "status": "in_review",
+            "changes": {
+              "status": {
+                "to": "in_review",
+                "from": "in_progress"
+              },
+              "statusVersion": {
+                "to": 2,
+                "from": 1
+              },
+              "executionState": {
+                "to": {
+                  "status": "pending",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": "4bf07b58-1d51-4465-9afb-d1882bf72b19",
+                  "lastDecisionId": null,
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": "review",
+                  "completedStageIds": [],
+                  "currentStageIndex": 0,
+                  "currentParticipant": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+                  },
+                  "lastDecisionOutcome": null,
+                  "changesRequestedCount": 0
+                },
+                "from": null
+              },
+              "assigneeAgentId": {
+                "to": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+                "from": "8513178a-52d4-4d32-87f5-f913863dd594"
+              }
+            },
+            "_previous": {
+              "status": "in_progress",
+              "statusVersion": 1,
+              "executionState": null,
+              "assigneeAgentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+            },
+            "identifier": "BOO-3",
+            "assigneeUserId": null,
+            "executionState": {
+              "status": "pending",
+              "monitor": null,
+              "reviewRequest": null,
+              "currentStageId": "4bf07b58-1d51-4465-9afb-d1882bf72b19",
+              "lastDecisionId": null,
+              "returnAssignee": {
+                "type": "agent",
+                "userId": null,
+                "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+              },
+              "currentStageType": "review",
+              "completedStageIds": [],
+              "currentStageIndex": 0,
+              "currentParticipant": {
+                "type": "agent",
+                "userId": null,
+                "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+              },
+              "lastDecisionOutcome": null,
+              "changesRequestedCount": 0
+            },
+            "assigneeAgentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+            "interruptedRunId": "dd29b676-87c0-4a5e-a4f6-101b4cd86538",
+            "authorizationReason": "allow_self"
+          }
+        },
+        {
+          "action": "issue.comment_added",
+          "actorType": "agent",
+          "actorId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+          "runId": "dd29b676-87c0-4a5e-a4f6-101b4cd86538",
+          "createdAt": "2026-10-14T14:59:49.698Z",
+          "details": {
+            "updated": true,
+            "commentId": "82e10b61-2717-40f3-8501-dd4e79eda645",
+            "identifier": "BOO-3",
+            "issueTitle": "Replays survive the cutoff; the sandbox limit holds at the write",
+            "bodySnippet": "## Done\n\nSplit validation so a replay never re-runs the moving rules, and moved the per-sandbox limit into the write.\n\n*",
+            "interruptedRunId": "dd29b676-87c0-4a5e-a4f6-101b4cd86538",
+            "authorizationReason": "allow_self"
+          }
+        },
+        {
+          "action": "issue.comment_added",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T15:00:00.986Z",
+          "details": {
+            "commentId": "d756c702-90de-4a73-a267-3912e64bda6f",
+            "identifier": "BOO-3",
+            "issueTitle": "Replays survive the cutoff; the sandbox limit holds at the write",
+            "bodySnippet": "Handoff reconciler: the review stage is pending for this agent, but no review run started after the handoff (last run fi",
+            "authorizationReason": "allow_board_actor"
+          }
+        },
+        {
+          "action": "issue.checked_out",
+          "actorType": "agent",
+          "actorId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "runId": "3928a38f-11f0-497e-87bb-5d75530fa40c",
+          "createdAt": "2026-10-14T15:02:25.789Z",
+          "details": {
+            "status": "in_progress",
+            "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+            "_previous": {
+              "status": "in_review"
+            }
+          }
+        },
+        {
+          "action": "issue.updated",
+          "actorType": "agent",
+          "actorId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "runId": "3928a38f-11f0-497e-87bb-5d75530fa40c",
+          "createdAt": "2026-10-14T15:03:01.262Z",
+          "details": {
+            "source": "comment",
+            "status": "in_review",
+            "changes": {
+              "status": {
+                "to": "in_review",
+                "from": "in_progress"
+              },
+              "statusVersion": {
+                "to": 4,
+                "from": 3
+              },
+              "assigneeUserId": {
+                "to": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                "from": null
+              },
+              "executionState": {
+                "to": {
+                  "status": "pending",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": "ed980cd0-c8b8-484c-91a6-4b09c6f2a780",
+                  "lastDecisionId": "f441ec41-e2eb-4f7d-85af-e2dc7db51ed6",
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": "approval",
+                  "completedStageIds": [
+                    "4bf07b58-1d51-4465-9afb-d1882bf72b19"
+                  ],
+                  "currentStageIndex": 1,
+                  "currentParticipant": {
+                    "type": "user",
+                    "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                    "agentId": null
+                  },
+                  "lastDecisionOutcome": "approved",
+                  "changesRequestedCount": 0
+                },
+                "from": {
+                  "status": "pending",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": "4bf07b58-1d51-4465-9afb-d1882bf72b19",
+                  "lastDecisionId": null,
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": "review",
+                  "completedStageIds": [],
+                  "currentStageIndex": 0,
+                  "currentParticipant": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+                  },
+                  "lastDecisionOutcome": null,
+                  "changesRequestedCount": 0
+                }
+              },
+              "assigneeAgentId": {
+                "to": null,
+                "from": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+              }
+            },
+            "_previous": {
+              "status": "in_progress",
+              "statusVersion": 3,
+              "assigneeUserId": null,
+              "executionState": {
+                "status": "pending",
+                "monitor": null,
+                "reviewRequest": null,
+                "currentStageId": "4bf07b58-1d51-4465-9afb-d1882bf72b19",
+                "lastDecisionId": null,
+                "returnAssignee": {
+                  "type": "agent",
+                  "userId": null,
+                  "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                },
+                "currentStageType": "review",
+                "completedStageIds": [],
+                "currentStageIndex": 0,
+                "currentParticipant": {
+                  "type": "agent",
+                  "userId": null,
+                  "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+                },
+                "lastDecisionOutcome": null,
+                "changesRequestedCount": 0
+              },
+              "assigneeAgentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a"
+            },
+            "identifier": "BOO-3",
+            "assigneeUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+            "executionState": {
+              "status": "pending",
+              "monitor": null,
+              "reviewRequest": null,
+              "currentStageId": "ed980cd0-c8b8-484c-91a6-4b09c6f2a780",
+              "lastDecisionId": "f441ec41-e2eb-4f7d-85af-e2dc7db51ed6",
+              "returnAssignee": {
+                "type": "agent",
+                "userId": null,
+                "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+              },
+              "currentStageType": "approval",
+              "completedStageIds": [
+                "4bf07b58-1d51-4465-9afb-d1882bf72b19"
+              ],
+              "currentStageIndex": 1,
+              "currentParticipant": {
+                "type": "user",
+                "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                "agentId": null
+              },
+              "lastDecisionOutcome": "approved",
+              "changesRequestedCount": 0
+            },
+            "assigneeAgentId": null,
+            "interruptedRunId": "3928a38f-11f0-497e-87bb-5d75530fa40c",
+            "authorizationReason": "allow_self"
+          }
+        },
+        {
+          "action": "issue.comment_added",
+          "actorType": "agent",
+          "actorId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+          "runId": "3928a38f-11f0-497e-87bb-5d75530fa40c",
+          "createdAt": "2026-10-14T15:03:01.307Z",
+          "details": {
+            "updated": true,
+            "commentId": "ab4e29fc-c3d1-4845-a399-63b515dea626",
+            "identifier": "BOO-3",
+            "issueTitle": "Replays survive the cutoff; the sandbox limit holds at the write",
+            "bodySnippet": "## Approved\n\nReviewed `main..fix/replay-and-limit` (`f62a312`) against all four acceptance criteria. Every one is met, a",
+            "interruptedRunId": "3928a38f-11f0-497e-87bb-5d75530fa40c",
+            "authorizationReason": "allow_self"
+          }
+        },
+        {
+          "action": "issue.inbox_archived",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T15:03:30.195Z",
+          "details": {
+            "source": "issue_status_done",
+            "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+            "archivedAt": "2026-10-14T15:03:30.206Z",
+            "targetResolvedFrom": "responsible_user"
+          }
+        },
+        {
+          "action": "issue.updated",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T15:03:30.212Z",
+          "details": {
+            "source": "comment",
+            "status": "done",
+            "changes": {
+              "status": {
+                "to": "done",
+                "from": "in_review"
+              },
+              "completedAt": {
+                "to": "2026-10-14T15:03:30.197Z",
+                "from": null
+              },
+              "statusVersion": {
+                "to": 5,
+                "from": 4
+              },
+              "executionState": {
+                "to": {
+                  "status": "completed",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": null,
+                  "lastDecisionId": "eb13c9e5-c9cf-4d5e-bee1-a076309cf58f",
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": null,
+                  "completedStageIds": [
+                    "4bf07b58-1d51-4465-9afb-d1882bf72b19",
+                    "ed980cd0-c8b8-484c-91a6-4b09c6f2a780"
+                  ],
+                  "currentStageIndex": null,
+                  "currentParticipant": null,
+                  "lastDecisionOutcome": "approved",
+                  "changesRequestedCount": 0
+                },
+                "from": {
+                  "status": "pending",
+                  "monitor": null,
+                  "reviewRequest": null,
+                  "currentStageId": "ed980cd0-c8b8-484c-91a6-4b09c6f2a780",
+                  "lastDecisionId": "f441ec41-e2eb-4f7d-85af-e2dc7db51ed6",
+                  "returnAssignee": {
+                    "type": "agent",
+                    "userId": null,
+                    "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                  },
+                  "currentStageType": "approval",
+                  "completedStageIds": [
+                    "4bf07b58-1d51-4465-9afb-d1882bf72b19"
+                  ],
+                  "currentStageIndex": 1,
+                  "currentParticipant": {
+                    "type": "user",
+                    "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                    "agentId": null
+                  },
+                  "lastDecisionOutcome": "approved",
+                  "changesRequestedCount": 0
+                }
+              }
+            },
+            "_previous": {
+              "status": "in_review",
+              "completedAt": null,
+              "statusVersion": 4,
+              "executionState": {
+                "status": "pending",
+                "monitor": null,
+                "reviewRequest": null,
+                "currentStageId": "ed980cd0-c8b8-484c-91a6-4b09c6f2a780",
+                "lastDecisionId": "f441ec41-e2eb-4f7d-85af-e2dc7db51ed6",
+                "returnAssignee": {
+                  "type": "agent",
+                  "userId": null,
+                  "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+                },
+                "currentStageType": "approval",
+                "completedStageIds": [
+                  "4bf07b58-1d51-4465-9afb-d1882bf72b19"
+                ],
+                "currentStageIndex": 1,
+                "currentParticipant": {
+                  "type": "user",
+                  "userId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+                  "agentId": null
+                },
+                "lastDecisionOutcome": "approved",
+                "changesRequestedCount": 0
+              }
+            },
+            "identifier": "BOO-3",
+            "executionState": {
+              "status": "completed",
+              "monitor": null,
+              "reviewRequest": null,
+              "currentStageId": null,
+              "lastDecisionId": "eb13c9e5-c9cf-4d5e-bee1-a076309cf58f",
+              "returnAssignee": {
+                "type": "agent",
+                "userId": null,
+                "agentId": "8513178a-52d4-4d32-87f5-f913863dd594"
+              },
+              "currentStageType": null,
+              "completedStageIds": [
+                "4bf07b58-1d51-4465-9afb-d1882bf72b19",
+                "ed980cd0-c8b8-484c-91a6-4b09c6f2a780"
+              ],
+              "currentStageIndex": null,
+              "currentParticipant": null,
+              "lastDecisionOutcome": "approved",
+              "changesRequestedCount": 0
+            },
+            "authorizationReason": "allow_board_actor"
+          }
+        },
+        {
+          "action": "issue.comment_added",
+          "actorType": "user",
+          "actorId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+          "agentId": null,
+          "runId": null,
+          "createdAt": "2026-10-14T15:03:30.227Z",
+          "details": {
+            "updated": true,
+            "commentId": "b758f01a-133a-4571-a8c4-d8ade1b7a3ec",
+            "identifier": "BOO-3",
+            "issueTitle": "Replays survive the cutoff; the sandbox limit holds at the write",
+            "bodySnippet": "Operator decision (operator role played by the build session, no person reviewed): approve f62a312.\n\nWhat the session in",
+            "authorizationReason": "allow_board_actor"
+          }
+        }
+      ]
     }
   ],
   "runs": [
@@ -1261,6 +1817,46 @@
       "issueCommentStatus": null,
       "usageJson": null,
       "issueId": "a249ea3e-1d85-480f-801e-a6488373a535"
+    },
+    {
+      "id": "dd29b676-87c0-4a5e-a4f6-101b4cd86538",
+      "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+      "status": "cancelled",
+      "invocationSource": "assignment",
+      "triggerDetail": "system",
+      "errorCode": "issue_reassigned",
+      "error": "Cancelled before issue reassignment",
+      "exitCode": 143,
+      "signal": null,
+      "createdAt": "2026-10-14T14:56:48.173Z",
+      "startedAt": "2026-10-14T14:56:48.218Z",
+      "finishedAt": "2026-10-14T14:59:49.592Z",
+      "retryOfRunId": null,
+      "scheduledRetryAttempt": 0,
+      "scheduledRetryReason": null,
+      "issueCommentStatus": null,
+      "usageJson": null,
+      "issueId": "4516d679-9010-408f-b9c0-adbaf40afce6"
+    },
+    {
+      "id": "3928a38f-11f0-497e-87bb-5d75530fa40c",
+      "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "status": "cancelled",
+      "invocationSource": "assignment",
+      "triggerDetail": "system",
+      "errorCode": "issue_reassigned",
+      "error": "Cancelled before issue reassignment",
+      "exitCode": 143,
+      "signal": null,
+      "createdAt": "2026-10-14T15:00:00.894Z",
+      "startedAt": "2026-10-14T15:00:00.938Z",
+      "finishedAt": "2026-10-14T15:03:01.225Z",
+      "retryOfRunId": null,
+      "scheduledRetryAttempt": 0,
+      "scheduledRetryReason": null,
+      "issueCommentStatus": null,
+      "usageJson": null,
+      "issueId": "4516d679-9010-408f-b9c0-adbaf40afce6"
     }
   ],
   "wakeupRequests": [
@@ -1333,6 +1929,46 @@
       "error": "Cancelled before issue reassignment",
       "runId": "afa2240c-e85e-48ba-b32d-8254eacc29eb",
       "createdAt": "2026-10-14T14:03:11.999Z"
+    },
+    {
+      "id": "17ce5c32-da51-4ed1-b565-857c9c9de89a",
+      "agentId": "8513178a-52d4-4d32-87f5-f913863dd594",
+      "source": "assignment",
+      "reason": "issue_assigned",
+      "status": "cancelled",
+      "error": "Cancelled before issue reassignment",
+      "runId": "dd29b676-87c0-4a5e-a4f6-101b4cd86538",
+      "createdAt": "2026-10-14T14:56:48.173Z"
+    },
+    {
+      "id": "6725af10-e529-4fb2-bd0c-3e1dfc01b836",
+      "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "source": "assignment",
+      "reason": "execution_reconciliation_required",
+      "status": "skipped",
+      "error": "The previous execution has not released its environment lease. Wait for cleanup before continuing this task.",
+      "runId": null,
+      "createdAt": "2026-10-14T14:59:49.735Z"
+    },
+    {
+      "id": "5ff3b7e9-1f1c-419a-b56a-3a528e91a7d5",
+      "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "source": "assignment",
+      "reason": "execution_review_requested",
+      "status": "cancelled",
+      "error": "Cancelled before issue reassignment",
+      "runId": "3928a38f-11f0-497e-87bb-5d75530fa40c",
+      "createdAt": "2026-10-14T15:00:00.894Z"
+    },
+    {
+      "id": "c9f0fefa-ffcd-41a1-95d0-1e027fc2d11f",
+      "agentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "source": "automation",
+      "reason": "issue_execution_deferred",
+      "status": "cancelled",
+      "error": null,
+      "runId": null,
+      "createdAt": "2026-10-14T15:00:01.008Z"
     }
   ],
   "executionDecisions": [
@@ -1375,6 +2011,26 @@
       "outcome": "approved",
       "createdAt": "2026-10-14T14:05:18.837Z",
       "body": "Operator decision: approve 2dfd1b3 (tests only).\n\nWhat I inspected:\n- Diff 13e6509..2dfd1b3: one new file, app/tests/clock-change.test.js, no source change.\n- `npm test` on a fresh checkout of the exported commit: 26 pass, 0 fail.\n- The expectation the retried run corrected (a 45-minute booking at 07:00 Paris also blocks the 07:30 start) matches the overlap rule approved in BOO-1.\n\nNot merged into the released branch during this rehearsal, so the production commit stays fixed; it is pushed as its own branch with a pull request."
+    },
+    {
+      "id": "f441ec41-e2eb-4f7d-85af-e2dc7db51ed6",
+      "issueId": "4516d679-9010-408f-b9c0-adbaf40afce6",
+      "stageType": "review",
+      "actorAgentId": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
+      "actorUserId": null,
+      "outcome": "approved",
+      "createdAt": "2026-10-14T15:03:01.262Z",
+      "body": "## Approved\n\nReviewed `main..fix/replay-and-limit` (`f62a312`) against all four acceptance criteria. Every one is met, and I verified the write path myself rather than taking the summary's word for it.\n\n**Diff is confined to the work**: `app/src/booking.js` and the new `app/tests/replay-and-limit.test.js`. `git diff main..fix/replay-and-limit -- app/migrations app/src/worker.js app/tests/booking.test.js app/tests/overlap.test.js app/tests/helpers.js` is empty \u2014 no schema change, no existing test touched or weakened (AC4). `worker.js:52` already maps `BookingError.status`/`.code` straight through, so 429 `sandbox_full` reaches the client unchanged.\n\n**Test suite, run here**: `cd app && npm test` \u2192 **34 pass, 0 fail**. I also checked out `main` into a throwaway worktree, copied the new test file in, and confirmed 3 of its 4 cases fail there (`too_soon` on the late retry, the key-reuse case, and the limit under concurrency) \u2014 so the test genuinely pins the defects.\n\n### Evidence per criterion\n\n**AC1 \u2014 order of checks.** `createBooking` (`app/src/booking.js:154-165`) is now `validateStructure` \u2192 `findByKey` \u2192 `checkEligibility`. The structural set in `validateStructure` is exactly the one the ticket names: sandbox, key, duration, offset-bearing instant, 15-minute boundary, time zone (`booking.js:56-69`). The moving rules are isolated in `checkEligibility` (`booking.js:75-79`) and are unreachable on the replay branch because that branch returns at line 161. Probed: a request that is both structurally bad and far too soon still gets `400 bad_duration`, so structural really is first.\n\n**AC2 \u2014 replays.** Confirmed by direct probe, not just the suite: a replay 10 days *after* its own start instant returns 200 with the original id; a replay of a cancelled booking returns `200` + `status: cancelled` + `replayed: true` and does not resurrect it, even when the sandbox has since refilled to 40; the same key with `durationMin` changed returns `422 idempotency_key_reused` in a full sandbox after the cutoff (i.e. reuse is diagnosed before both eligibility and the limit).\n\n**AC3 \u2014 the limit holds at the write.** The count moved into the same `INSERT ... SELECT ... WHERE` as the overlap test (`booking.js:117-131`); the pre-insert `SELECT COUNT(*)` is gone. One statement, one write lock, nothing to overtake. The `tick()` in `tests/d1-sqlite.js` yields before every statement, so the interleaving is real and the old code did lose this race. Beyond the supplied 3-racer test I ran:\n\n- 12 concurrent requests for the single remaining place \u2192 exactly 1 confirmed, 11 \u00d7 `429 sandbox_full`, total 40.\n- 50 simultaneous requests into an empty sandbox \u2192 exactly 40 confirmed, 10 \u00d7 `429`.\n- 3 concurrent replays of an existing key in a *full* sandbox \u2192 all 200, no 429 (the replay check at `booking.js:183-184` correctly precedes `refusal`).\n- Double-submit of one new key at the limit boundary \u2192 `201` + `200`, total 40.\n- Overlap in a full sandbox \u2192 `409 slot_taken`; overlap in a non-full sandbox \u2192 `409`; fresh key in a full sandbox \u2192 `429`; one cancellation frees exactly one place and the next request is refused again.\n- The count is scoped per sandbox \u2014 a full sandbox does not refuse a different one.\n\nI agree with reporting 409 ahead of 429 when both hold; AC3 reads that way to me too.\n\n### One noted behaviour, not blocking\n\n`refusal` (`booking.js:137-148`) diagnoses after the failed write, so a cancellation landing in between makes it misreport. I reproduced it: full sandbox, one fresh request loses on the limit, a `cancelBooking` interleaves before the diagnosis read \u2192 the caller gets `409 slot_taken` although there is no overlap and the sandbox now has room. The safety invariant never breaks (I confirmed 39 confirmed rows after, never 41), the client's retry succeeds, and `main` already had this shape for the overlap case \u2014 so it is not a regression and not an AC3 violation, which governs the refusal of requests that would exceed the limit. If it is ever worth tightening: when neither obstacle is present, retry the insert once instead of falling through to `slot_taken`. No need to do it on this ticket.\n\nApproving. Nothing to change."
+    },
+    {
+      "id": "eb13c9e5-c9cf-4d5e-bee1-a076309cf58f",
+      "issueId": "4516d679-9010-408f-b9c0-adbaf40afce6",
+      "stageType": "approval",
+      "actorAgentId": null,
+      "actorUserId": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf",
+      "outcome": "approved",
+      "createdAt": "2026-10-14T15:03:30.195Z",
+      "body": "Operator decision (operator role played by the build session, no person reviewed): approve f62a312.\n\nWhat the session inspected:\n- Diff 143ee46..f62a312: app/src/booking.js only. The count condition is in the same INSERT ... SELECT ... WHERE as the overlap test; the earlier separate count read is gone; refusals are diagnosed after a zero-row write (409 overlap, 429 full).\n- `npm test` on a fresh checkout of the exported commit: 34 pass, 0 fail.\n- Local D1 (wrangler dev): `node scripts/race.mjs ... 5 --expect fixed`: 5 of 5 rounds with exactly one 201, two 409, one stored booking.\n\nNext: merged and deployed outside the GitHub gate (its secrets were removed after the first run); the deployment is done locally by the build session and recorded as such."
     }
   ],
   "environmentLeases": [
@@ -1417,6 +2073,22 @@
       "status": "expired",
       "acquiredAt": "2026-10-14T14:03:12.138Z",
       "releasedAt": "2026-10-14T14:05:00.627Z"
+    },
+    {
+      "id": "843f54d6-1f9c-46a9-8070-0d26c7c2243f",
+      "issueId": "4516d679-9010-408f-b9c0-adbaf40afce6",
+      "runId": "dd29b676-87c0-4a5e-a4f6-101b4cd86538",
+      "status": "expired",
+      "acquiredAt": "2026-10-14T14:56:48.370Z",
+      "releasedAt": "2026-10-14T14:59:49.830Z"
+    },
+    {
+      "id": "b971eb2d-6f21-41ed-afd2-6e5aeb85678f",
+      "issueId": "4516d679-9010-408f-b9c0-adbaf40afce6",
+      "runId": "3928a38f-11f0-497e-87bb-5d75530fa40c",
+      "status": "expired",
+      "acquiredAt": "2026-10-14T15:00:01.105Z",
+      "releasedAt": "2026-10-14T15:03:01.402Z"
     }
   ],
   "redactions": {}
