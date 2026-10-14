@@ -36,8 +36,9 @@
     "githubCredentialsInContainer": false
   },
   "humans": {
-    "paperclipOperatorUser": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf (display name Operator, operator@example.com), a real Paperclip user account operated for this rehearsal",
-    "githubApprover": "the repository owner account, used as the operator account for release approvals"
+    "operatorRole": "The operator role (Paperclip approvals, GitHub environment approvals and merges) was played by the build session through the operator account; no person reviewed these changes.",
+    "paperclipOperatorUser": "PUV6D31Cbd28LfEJc4wbx1xscJ4YvYaf (display name Operator, operator@example.com), a Paperclip user account created for this rehearsal and driven by the build session",
+    "githubOperatorAccount": "the repository owner's account, driven by the build session for release approvals and the merge of pull request #1"
   },
   "agents": {
     "Reviewer": "57fc01a8-263c-4c7e-97e0-62d922795c5a",
@@ -208,7 +209,7 @@
   ],
   "plannedDrills": [
     "13:39 rejected the first production request on purpose",
-    "13:59 killed the Implementer process on BOO-2 mid-run (SIGKILL); Paperclip retried after 30 s and the retry finished the task"
+    "13:59 killed the Implementer process on BOO-2 mid-run (SIGKILL); Paperclip retried about 40 s later (failed 13:59:21, retry started 14:00:03) and the retry finished the task"
   ],
   "setupOutsidePaperclip": [
     "baseline app and tests",
@@ -217,5 +218,6 @@
     "Paperclip container, onboarding, company, agents, goal and tickets (created through the API as the operator user)",
     "moving agent commits out of the container (git bundle) and opening the pull requests",
     "release approvals in GitHub"
-  ]
+  ],
+  "releaseGate": "Production deployed only from an approved run in the protected production environment (admin bypass off). The staging job deployed on every push to main with the same account-wide Cloudflare token and no reviewer, so the gate held the production job, not the only key. Both deploy secrets were removed from the GitHub environments at 14:50 UTC after the run; later corrections were deployed locally by the build session."
 }

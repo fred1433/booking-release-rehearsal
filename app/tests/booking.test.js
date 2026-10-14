@@ -97,3 +97,12 @@ test('slot list marks overlapping starts as taken for every duration', async () 
   assert.equal(byTeacher['08:30'], false);
   assert.equal(byTeacher['09:00'], true);
 });
+
+test('refuses a start without a time zone, and an unknown time zone', async () => {
+  const db = fresh();
+  await rejects(createBooking(db, req('2026-10-20T06:00:00', 30), opts), 400, 'bad_start');
+  await rejects(createBooking(db, req('2026-10-20 08:00', 30), opts), 400, 'bad_start');
+  assert.equal((await createBooking(db, req('2026-10-20T08:00:00+02:00', 30), opts)).status, 201);
+  await rejects(createBooking(db, req(at(TUE_0800, 60), 30, { learnerTz: 'Mars/Base' }), opts), 400, 'bad_timezone');
+  await rejects(listSlots(db, { sandbox: SANDBOX, date: '2026-10-20', durationMin: 30, learnerTz: 'Mars/Base', now: NOW }), 400, 'bad_timezone');
+});

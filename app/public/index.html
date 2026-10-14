@@ -31,8 +31,8 @@ legend{font-weight:600;font-size:14px;margin-bottom:8px;padding:0}
 .chip small{color:var(--pencil);font-weight:400;margin-left:4px}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .chip[aria-pressed="true"] small{color:#CFCAD8}
-.dates{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:thin}
-.date{flex:0 0 auto;width:58px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 0;text-align:center;cursor:pointer;font:inherit;color:inherit}
+.dates{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:2px 0 4px}
+.date{width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 0;text-align:center;cursor:pointer;font:inherit;color:inherit}
 .date .dw{display:block;font-size:12px;color:var(--pencil)}
 .date .dd{display:block;font:600 22px/1.1 var(--serif)}
 .date[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 -4px 0 var(--tape)}
@@ -60,9 +60,12 @@ h2{font:600 20px/1.2 var(--serif);margin:30px 0 8px}
 .mine li .w span{color:var(--pencil)}
 .mine li.cancelled .w{color:var(--pencil);text-decoration:line-through}
 .mine .x{background:none;border:0;color:var(--tape);font:600 14px var(--sans);cursor:pointer;padding:6px}
-.drills{display:grid;gap:12px;margin-top:6px}
-.drill{border:1px dashed #B9B5C2;border-radius:12px;padding:12px 14px}
-.drill p{margin:0 0 10px;font-size:14.5px;color:var(--pencil)}
+.drills{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.tryit h2{margin-top:18px}
+.bookhead{margin-top:26px}
+@media (max-width:560px){.drills{grid-template-columns:1fr}}
+.drill{border:1px dashed #B9B5C2;border-radius:12px;padding:10px 12px}
+.drill p{margin:0 0 8px;font-size:14px;line-height:1.4;color:var(--pencil)}
 .drill p b{color:var(--ink);font-weight:600}
 .drill ol{margin:10px 0 0;padding-left:20px;font-size:14px}
 .drill ol li{margin:2px 0}
@@ -80,6 +83,23 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
   <p class="lede">A synthetic teacher in Paris, you in Sydney. Prices in Australian dollars; payment is simulated and nothing is charged.</p>
   <div class="deploy" id="deploy" aria-live="polite">Checking which release is live…</div>
 
+  <section class="tryit" aria-labelledby="tryit">
+    <h2 id="tryit">Try to break it</h2>
+    <div class="drills">
+      <div class="drill">
+        <p><b>Two overlapping requests at once.</b> A 60-minute session and a 30-minute one that starts half-way through it, sent in the same instant.</p>
+        <button class="btn ghost" id="race">Send both requests</button>
+        <ol id="raceOut" hidden></ol>
+      </div>
+      <div class="drill">
+        <p><b>A reply that never arrives.</b> Books a session, drops the reply, then retries with the same request key, as a phone on a bad connection would.</p>
+        <button class="btn ghost" id="lost">Book, drop the reply, retry</button>
+        <ol id="lostOut" hidden></ol>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="bookhead">Book a session</h2>
   <fieldset>
     <legend>Session length</legend>
     <div class="durations" id="durations"></div>
@@ -105,20 +125,6 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
   <h2>Your sessions</h2>
   <ul class="mine" id="mine"></ul>
   <p class="empty" id="mineEmpty">No sessions yet.</p>
-
-  <h2>Try to break it</h2>
-  <div class="drills">
-    <div class="drill">
-      <p><b>Two overlapping requests at once.</b> Sends a 60-minute session and a 30-minute session that starts half-way through it, in the same instant.</p>
-      <button class="btn ghost" id="race">Send both requests</button>
-      <ol id="raceOut" hidden></ol>
-    </div>
-    <div class="drill">
-      <p><b>A reply that never arrives.</b> Books a session, throws the reply away, then retries with the same request key, as a phone on a bad connection would.</p>
-      <button class="btn ghost" id="lost">Book, drop the reply, retry</button>
-      <ol id="lostOut" hidden></ol>
-    </div>
-  </div>
 
   <footer>
     <span>Your bookings live in a private sandbox that other visitors cannot see.</span>
@@ -175,7 +181,7 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
   function renderDates() {
     const box = $('dates'); box.innerHTML = '';
     const now = Date.now();
-    for (let i = 0; i < 21; i++) {
+    for (let i = 1; i <= 14; i++) {
       const d = new Date(now + i * 86400000); const iso = sydDate(d);
       if (box.querySelector(`[data-d="${iso}"]`)) continue;
       const b = document.createElement('button'); b.className = 'date'; b.type = 'button'; b.dataset.d = iso;
@@ -258,7 +264,7 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
   }
 
   async function findFree(minutes, extraOffsetMin = 0) {
-    for (let i = 1; i < 21; i++) {
+    for (let i = 1; i <= 14; i++) {
       const date = sydDate(new Date(Date.now() + i * 86400000));
       const r60 = await call(`api/slots?sandbox=${sandbox}&date=${date}&durationMin=${minutes}`);
       if (r60.status !== 200) continue;
@@ -285,8 +291,10 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
       const lbl = (iso) => new Intl.DateTimeFormat('en-AU', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(iso));
       line(out, `60 min at ${lbl(pair[0])}: ${verdict(a)}`);
       line(out, `30 min at ${lbl(pair[1])}: ${verdict(b)}`);
-      const both = a.status === 201 && b.status === 201;
-      line(out, both ? '<b>Both were confirmed: the teacher is double-booked.</b> This release has the overlap defect.' : 'Only one was confirmed. The other was refused when it was written, not by this page.');
+      const n = [a, b].filter((r) => r.status === 201).length;
+      if (n === 2) line(out, '<b>Both were confirmed: the teacher is double-booked.</b> This release has the overlap defect.');
+      else if (n === 1) line(out, 'Only one was confirmed. The other was refused when it was written, not by this page.');
+      else line(out, `Nothing was confirmed, so this round proves nothing: ${(a.body && a.body.message) || 'refused'}. Start a fresh sandbox below and try again.`);
     } finally { $('race').disabled = false; await Promise.all([loadSlots(), loadMine()]); }
   };
 
@@ -297,7 +305,8 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
       if (!one) { line(out, 'No free time left in your sandbox. Start a fresh sandbox below.'); return; }
       const key = rnd();
       const first = await book(one[0], 30, key);
-      line(out, `First attempt: ${verdict(first)}, but the page ignores the reply.`);
+      if (first.status !== 201) { line(out, `Nothing was booked: ${(first.body && first.body.message) || 'refused'}. Start a fresh sandbox below and try again.`); return; }
+      line(out, `First attempt: ${verdict(first)}; reply dropped by the page (shown here for the record).`);
       const retry = await book(one[0], 30, key);
       line(out, `Retry with the same key: ${verdict(retry)}.`);
       const same = first.body && retry.body && first.body.booking && retry.body.booking && first.body.booking.id === retry.body.booking.id;

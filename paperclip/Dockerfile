@@ -1,5 +1,5 @@
 # Isolated runtime for the Paperclip control plane and its Claude Code workers.
-# Nothing from the host is mounted except a named Docker volume for Paperclip data.
+# Nothing from the host is mounted: Paperclip data and the agents' working copy live in two named Docker volumes.
 FROM node:24-trixie-slim
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates git curl jq ripgrep python3 tini procps \

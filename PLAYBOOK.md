@@ -48,11 +48,11 @@ Then read the issue back and confirm both stages and participants are there. Pap
 - **Check for skipped wake-ups** after every handoff: the wake-up list shows `skipped` with the reason. If one is skipped, wake the agent with the issue id:
   `POST /api/agents/<reviewer>/wakeup {"source":"assignment","reason":"execution_review_requested","payload":{"issueId":"<issue>"}}`
 - **Mentions do not wake agents** (since 2026.1005). Assignment and review requests do.
-- **A killed worker is retried.** When the Implementer's process was killed mid-task, Paperclip marked the run failed and retried it 30 seconds later. The retry picked up the half-written file and finished the job.
+- **A killed worker is retried.** When the Implementer's process was killed mid-task, Paperclip marked the run failed and retried it about 40 seconds later. The retry picked up the half-written file and finished the job.
 
 ## 5. Approving: what the human checks
 
-The approval is a decision, not a click. In this run the operator account:
+The approval is a decision, not a click. In this run the operator role was played by the build session through the operator account (no person reviewed these changes); it:
 
 1. read the diff;
 2. ran the tests on a fresh checkout;
@@ -64,12 +64,12 @@ A comment posted separately does not count as the decision.
 
 ## 6. Releasing
 
-Paperclip's job ends at "done". Then:
+Paperclip's job ends at "done". Then (in this run, every step below was done by the build session):
 
 1. move the commits out of the agents' box into a pull request (here: a git bundle, by the operator);
 2. tests run on the pull request; merge;
 3. staging deploys by itself and runs a smoke test;
-4. production waits for an approval of that exact run, and the run is pinned to one commit;
+4. production waits for an approval of that exact run, and the run is pinned to one commit. Give each environment its own narrowly scoped deploy credential: here staging held the same account-wide token without a reviewer, so the gate held the production job, not the only key;
 5. after release, run the check that proves the fix (here, `node scripts/race.mjs <production api> 5`).
 
 ## 7. Rolling back
@@ -81,7 +81,7 @@ Run the release workflow by hand with the previous commit. It goes through the s
 
 ## 8. What was not Paperclip
 
-Paperclip handled ownership, assignment, execution state, the review stage and the human approval stage. The rest was built beside it: correctness in the code, the release gate, smoke tests, the rollback, moving commits out of the container, and this export of the record (`scripts/export_record.py`; Paperclip's own company export leaves out approvals, costs and the activity log).
+Paperclip handled ownership, assignment, execution state, the review stage and the approval stage. The rest was built beside it: correctness in the code, the release gate, smoke tests, the rollback, moving commits out of the container, and this export of the record (`scripts/export_record.py`; Paperclip's own company export leaves out approvals, costs and the activity log).
 
 ## 9. Limits seen in this version
 

@@ -23,6 +23,11 @@ export class BookingError extends Error {
 
 const hm = (s) => { const [h, m] = s.split(':').map(Number); return h * 60 + m; };
 
+function checkTz(tz) {
+  try { new Intl.DateTimeFormat('en', { timeZone: tz }); return tz; }
+  catch { throw new BookingError(400, 'bad_timezone', 'unknown time zone'); }
+}
+
 export function validSandbox(s) { return typeof s === 'string' && /^[a-z0-9-]{8,40}$/.test(s); }
 
 /** Is [start, start+duration) inside one availability window of the teacher (teacher wall clock)? */
@@ -49,14 +54,15 @@ function validateRequest(req, now) {
     throw new BookingError(400, 'bad_idempotency_key', 'idempotencyKey is required (8-80 chars)');
   const duration = Number(req.durationMin);
   if (!DURATIONS.includes(duration)) throw new BookingError(400, 'bad_duration', 'durationMin must be 30, 45 or 60');
-  const start = Date.parse(req.start);
-  if (!Number.isFinite(start)) throw new BookingError(400, 'bad_start', 'start must be an ISO-8601 instant');
+  // An instant needs its offset: "2026-10-26T08:00Z" or "...+11:00". A bare local time is refused.
+  const hasZone = typeof req.start === 'string' && /T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/i.test(req.start);
+  const start = hasZone ? Date.parse(req.start) : NaN;
+  if (!Number.isFinite(start)) throw new BookingError(400, 'bad_start', 'start must be an ISO-8601 instant with Z or a UTC offset');
   if (start % (STEP_MIN * 60000) !== 0) throw new BookingError(400, 'bad_start', 'start must be on a 15-minute boundary');
   if (start < now + MIN_LEAD_MS) throw new BookingError(422, 'too_soon', 'start must be at least one hour ahead');
   if (start > now + MAX_AHEAD_DAYS * 86400000) throw new BookingError(422, 'too_far', `start must be within ${MAX_AHEAD_DAYS} days`);
   if (!withinAvailability(start, duration)) throw new BookingError(422, 'outside_availability', 'the teacher is not available for that whole session');
-  const learnerTz = req.learnerTz || LEARNER_TZ;
-  try { new Intl.DateTimeFormat('en', { timeZone: learnerTz }); } catch { throw new BookingError(400, 'bad_timezone', 'unknown learnerTz'); }
+  const learnerTz = checkTz(req.learnerTz || LEARNER_TZ);
   return { sandbox: req.sandbox, key: req.idempotencyKey, duration, start, end: start + duration * 60000, learnerTz };
 }
 
@@ -172,6 +178,7 @@ export async function listSlots(db, { sandbox, date, durationMin, learnerTz = LE
   const duration = Number(durationMin);
   if (!DURATIONS.includes(duration)) throw new BookingError(400, 'bad_duration', 'durationMin must be 30, 45 or 60');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) throw new BookingError(400, 'bad_date', 'date must be YYYY-MM-DD');
+  checkTz(learnerTz);
   const starts = [];
   for (let k = -1; k <= 1; k++) {
     const tDate = addDays(date, k);

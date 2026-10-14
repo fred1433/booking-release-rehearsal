@@ -1,4 +1,5 @@
 {
+  "operatorRole": "The operator role (Paperclip approvals, GitHub environment approvals and merges) was played by the build session through the operator account; no person reviewed these changes. Text inside tickets and comments below is quoted as recorded during the run.",
   "exportedFrom": "Paperclip API (read-only export, not a live Paperclip interface)",
   "paperclip": {
     "version": "2026.1012.0",
