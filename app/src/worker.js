@@ -10,7 +10,7 @@ async function api(request, env, path) {
   const opts = { appSha: env.GIT_SHA || 'dev' };
   if (path === '/api/health') {
     const ping = await db.prepare('SELECT COUNT(*) AS n FROM bookings').first();
-    return json(200, { ok: true, env: env.ENV_NAME || 'dev', sha: env.GIT_SHA || 'dev', deployedAt: env.DEPLOYED_AT || null, bookingsStored: ping.n });
+    return json(200, { ok: true, env: env.ENV_NAME || 'dev', sha: env.GIT_SHA || 'dev', deployedAt: env.DEPLOYED_AT || null, deployedBy: env.DEPLOYED_BY || 'release pipeline', bookingsStored: ping.n });
   }
   if (path === '/api/config' && request.method === 'GET') {
     return json(200, { teacher: { name: TEACHER.name, tz: TEACHER.tz, currency: TEACHER.currency, prices: TEACHER.prices }, learnerTz: LEARNER_TZ, durations: DURATIONS });

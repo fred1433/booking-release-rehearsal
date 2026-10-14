@@ -1,0 +1,1251 @@
+{
+  "note": "Exported on 14 Oct 2026 from the working repository, which is now private. GitHub pages for these runs, pull requests and deployments are no longer public; this file keeps their data.",
+  "runs": [
+    {
+      "id": 38573430100,
+      "workflow": "release",
+      "event": "push",
+      "headSha": "37d56fd159caf8528350a786e6d0c57a7f81bdc5",
+      "title": "Booking page: durations, Sydney days, slots with Paris time, your ses\u2026",
+      "conclusion": "failure",
+      "createdAt": "2026-10-14T13:38:09Z",
+      "runAttempt": 2,
+      "jobs": [
+        {
+          "name": "production",
+          "conclusion": "failure",
+          "startedAt": "2026-10-14T13:39:45Z",
+          "completedAt": "2026-10-14T13:40:24Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Confirm the approved run releases the tested commit",
+              "conclusion": "success"
+            },
+            {
+              "name": "Migrate and deploy production",
+              "conclusion": "success"
+            },
+            {
+              "name": "Smoke test production",
+              "conclusion": "failure"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "test",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:38:19Z",
+          "completedAt": "2026-10-14T13:38:26Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm test",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "staging",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:38:29Z",
+          "completedAt": "2026-10-14T13:39:07Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Migrate and deploy staging",
+              "conclusion": "success"
+            },
+            {
+              "name": "Smoke test staging",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "resolve",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:38:12Z",
+          "completedAt": "2026-10-14T13:38:17Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run SHA=\"\"",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ],
+      "approvals": [
+        {
+          "state": "approved",
+          "by": "operator account",
+          "comment": "Approved by the operator account: release 37d56fd (baseline booking app, known overlap defect declared in the README) to production.",
+          "environments": [
+            "production"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 38575163046,
+      "workflow": "tests",
+      "event": "push",
+      "headSha": "259df74e29a3f1e3df7b795cf06692a67b02977b",
+      "title": "Seeded requirement: overlapping sessions of different lengths must no\u2026",
+      "conclusion": "failure",
+      "createdAt": "2026-10-14T13:50:07Z",
+      "runAttempt": 1,
+      "jobs": [
+        {
+          "name": "test",
+          "conclusion": "failure",
+          "startedAt": "2026-10-14T13:50:09Z",
+          "completedAt": "2026-10-14T13:50:17Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm test",
+              "conclusion": "failure"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ],
+      "approvals": []
+    },
+    {
+      "id": 38575241258,
+      "workflow": "release",
+      "event": "push",
+      "headSha": "7e4de349e1112cf89b2624f0731951a2a822d773",
+      "title": "Merge BOO-1: refuse overlapping bookings at the write (#1)",
+      "conclusion": "success",
+      "createdAt": "2026-10-14T13:50:38Z",
+      "runAttempt": 1,
+      "jobs": [
+        {
+          "name": "resolve",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:50:41Z",
+          "completedAt": "2026-10-14T13:50:47Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run SHA=\"\"",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "test",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:50:49Z",
+          "completedAt": "2026-10-14T13:50:55Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm test",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "staging",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:51:00Z",
+          "completedAt": "2026-10-14T13:51:34Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Migrate and deploy staging",
+              "conclusion": "success"
+            },
+            {
+              "name": "Smoke test staging",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "production",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:52:00Z",
+          "completedAt": "2026-10-14T13:52:26Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Confirm the approved run releases the tested commit",
+              "conclusion": "success"
+            },
+            {
+              "name": "Migrate and deploy production",
+              "conclusion": "success"
+            },
+            {
+              "name": "Smoke test production",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ],
+      "approvals": [
+        {
+          "state": "approved",
+          "by": "operator account",
+          "comment": "Approved by the operator account: release 7e4de34 (merge of BOO-1, agent commit 13e6509) after staging smoke test and 5/5 clean race rounds on staging.",
+          "environments": [
+            "production"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 38575550768,
+      "workflow": "release",
+      "event": "workflow_dispatch",
+      "headSha": "7e4de349e1112cf89b2624f0731951a2a822d773",
+      "title": "release",
+      "conclusion": "failure",
+      "createdAt": "2026-10-14T13:52:45Z",
+      "runAttempt": 1,
+      "jobs": [
+        {
+          "name": "resolve",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:52:49Z",
+          "completedAt": "2026-10-14T13:52:56Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run SHA=\"37d56fd159caf8528350a786e6d0c57a7f81bdc5\"",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "test",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:52:58Z",
+          "completedAt": "2026-10-14T13:53:05Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm test",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "staging",
+          "conclusion": "failure",
+          "startedAt": "2026-10-14T13:53:09Z",
+          "completedAt": "2026-10-14T13:53:40Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Migrate and deploy staging",
+              "conclusion": "success"
+            },
+            {
+              "name": "Smoke test staging",
+              "conclusion": "failure"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "production",
+          "conclusion": "skipped",
+          "startedAt": "2026-10-14T13:53:40Z",
+          "completedAt": "2026-10-14T13:53:40Z",
+          "steps": []
+        }
+      ],
+      "approvals": []
+    },
+    {
+      "id": 38575788870,
+      "workflow": "release",
+      "event": "workflow_dispatch",
+      "headSha": "3f0b73810cea0bc98d779607d8355ee8a055459d",
+      "title": "release",
+      "conclusion": "success",
+      "createdAt": "2026-10-14T13:54:23Z",
+      "runAttempt": 1,
+      "jobs": [
+        {
+          "name": "resolve",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:54:26Z",
+          "completedAt": "2026-10-14T13:54:29Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run SHA=\"37d56fd159caf8528350a786e6d0c57a7f81bdc5\"",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "test",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:54:32Z",
+          "completedAt": "2026-10-14T13:54:40Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm test",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "staging",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:54:44Z",
+          "completedAt": "2026-10-14T13:55:14Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Migrate and deploy staging",
+              "conclusion": "success"
+            },
+            {
+              "name": "Smoke test staging",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "production",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:55:26Z",
+          "completedAt": "2026-10-14T13:55:50Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Confirm the approved run releases the tested commit",
+              "conclusion": "success"
+            },
+            {
+              "name": "Migrate and deploy production",
+              "conclusion": "success"
+            },
+            {
+              "name": "Smoke test production",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ],
+      "approvals": [
+        {
+          "state": "approved",
+          "by": "operator account",
+          "comment": "Approved by the operator account: rollback drill, return production to 37d56fd (release A). Bookings must survive.",
+          "environments": [
+            "production"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 38576054136,
+      "workflow": "release",
+      "event": "workflow_dispatch",
+      "headSha": "3f0b73810cea0bc98d779607d8355ee8a055459d",
+      "title": "release",
+      "conclusion": "success",
+      "createdAt": "2026-10-14T13:56:13Z",
+      "runAttempt": 1,
+      "jobs": [
+        {
+          "name": "resolve",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:56:24Z",
+          "completedAt": "2026-10-14T13:56:28Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run SHA=\"7e4de349e1112cf89b2624f0731951a2a822d773\"",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "test",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:56:31Z",
+          "completedAt": "2026-10-14T13:56:40Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run npm test",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "staging",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:56:44Z",
+          "completedAt": "2026-10-14T13:57:21Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Migrate and deploy staging",
+              "conclusion": "success"
+            },
+            {
+              "name": "Smoke test staging",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "production",
+          "conclusion": "success",
+          "startedAt": "2026-10-14T13:57:28Z",
+          "completedAt": "2026-10-14T13:57:55Z",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Confirm the approved run releases the tested commit",
+              "conclusion": "success"
+            },
+            {
+              "name": "Migrate and deploy production",
+              "conclusion": "success"
+            },
+            {
+              "name": "Smoke test production",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ],
+      "approvals": [
+        {
+          "state": "approved",
+          "by": "operator account",
+          "comment": "Approved by the operator account: roll forward to 7e4de34 (release B) after the rollback drill.",
+          "environments": [
+            "production"
+          ]
+        }
+      ]
+    }
+  ],
+  "deployments": [
+    {
+      "id": 7068175295,
+      "environment": "staging",
+      "sha": "9696ab76d3c868ae15b8c22436e719569684753a",
+      "createdAt": "2026-10-14T14:28:37Z",
+      "statuses": [
+        {
+          "state": "failure",
+          "at": "2026-10-14T14:28:58Z"
+        },
+        {
+          "state": "in_progress",
+          "at": "2026-10-14T14:28:41Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T14:28:39Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T14:28:38Z"
+        }
+      ]
+    },
+    {
+      "id": 7067391660,
+      "environment": "production",
+      "sha": "3f0b73810cea0bc98d779607d8355ee8a055459d",
+      "createdAt": "2026-10-14T13:57:21Z",
+      "statuses": [
+        {
+          "state": "success",
+          "at": "2026-10-14T13:57:56Z"
+        },
+        {
+          "state": "in_progress",
+          "at": "2026-10-14T13:57:29Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:57:26Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T13:57:22Z"
+        }
+      ]
+    },
+    {
+      "id": 7067374761,
+      "environment": "staging",
+      "sha": "3f0b73810cea0bc98d779607d8355ee8a055459d",
+      "createdAt": "2026-10-14T13:56:41Z",
+      "statuses": [
+        {
+          "state": "success",
+          "at": "2026-10-14T13:57:21Z"
+        },
+        {
+          "state": "in_progress",
+          "at": "2026-10-14T13:56:45Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:56:43Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:56:43Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T13:56:42Z"
+        }
+      ]
+    },
+    {
+      "id": 7067340071,
+      "environment": "production",
+      "sha": "3f0b73810cea0bc98d779607d8355ee8a055459d",
+      "createdAt": "2026-10-14T13:55:15Z",
+      "statuses": [
+        {
+          "state": "success",
+          "at": "2026-10-14T13:55:51Z"
+        },
+        {
+          "state": "in_progress",
+          "at": "2026-10-14T13:55:27Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:55:25Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:55:25Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T13:55:16Z"
+        }
+      ]
+    },
+    {
+      "id": 7067326672,
+      "environment": "staging",
+      "sha": "3f0b73810cea0bc98d779607d8355ee8a055459d",
+      "createdAt": "2026-10-14T13:54:41Z",
+      "statuses": [
+        {
+          "state": "success",
+          "at": "2026-10-14T13:55:15Z"
+        },
+        {
+          "state": "in_progress",
+          "at": "2026-10-14T13:54:45Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:54:44Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:54:44Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T13:54:42Z"
+        }
+      ]
+    },
+    {
+      "id": 7067288111,
+      "environment": "staging",
+      "sha": "7e4de349e1112cf89b2624f0731951a2a822d773",
+      "createdAt": "2026-10-14T13:53:05Z",
+      "statuses": [
+        {
+          "state": "failure",
+          "at": "2026-10-14T13:53:41Z"
+        },
+        {
+          "state": "in_progress",
+          "at": "2026-10-14T13:53:10Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:53:08Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:53:08Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T13:53:07Z"
+        }
+      ]
+    },
+    {
+      "id": 7067251932,
+      "environment": "production",
+      "sha": "7e4de349e1112cf89b2624f0731951a2a822d773",
+      "createdAt": "2026-10-14T13:51:35Z",
+      "statuses": [
+        {
+          "state": "success",
+          "at": "2026-10-14T13:52:27Z"
+        },
+        {
+          "state": "in_progress",
+          "at": "2026-10-14T13:52:01Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:51:59Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:51:59Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T13:51:36Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T13:51:36Z"
+        }
+      ]
+    },
+    {
+      "id": 7067234912,
+      "environment": "staging",
+      "sha": "7e4de349e1112cf89b2624f0731951a2a822d773",
+      "createdAt": "2026-10-14T13:50:55Z",
+      "statuses": [
+        {
+          "state": "success",
+          "at": "2026-10-14T13:51:35Z"
+        },
+        {
+          "state": "in_progress",
+          "at": "2026-10-14T13:51:01Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:50:58Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:50:58Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T13:50:56Z"
+        }
+      ]
+    },
+    {
+      "id": 7066952664,
+      "environment": "production",
+      "sha": "37d56fd159caf8528350a786e6d0c57a7f81bdc5",
+      "createdAt": "2026-10-14T13:39:36Z",
+      "statuses": [
+        {
+          "state": "failure",
+          "at": "2026-10-14T13:40:25Z"
+        },
+        {
+          "state": "in_progress",
+          "at": "2026-10-14T13:39:46Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:39:44Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:39:44Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T13:39:37Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T13:39:37Z"
+        }
+      ]
+    },
+    {
+      "id": 7066941413,
+      "environment": "production",
+      "sha": "37d56fd159caf8528350a786e6d0c57a7f81bdc5",
+      "createdAt": "2026-10-14T13:39:07Z",
+      "statuses": [
+        {
+          "state": "failure",
+          "at": "2026-10-14T13:39:25Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T13:39:09Z"
+        }
+      ]
+    },
+    {
+      "id": 7066924477,
+      "environment": "staging",
+      "sha": "37d56fd159caf8528350a786e6d0c57a7f81bdc5",
+      "createdAt": "2026-10-14T13:38:26Z",
+      "statuses": [
+        {
+          "state": "success",
+          "at": "2026-10-14T13:39:08Z"
+        },
+        {
+          "state": "in_progress",
+          "at": "2026-10-14T13:38:30Z"
+        },
+        {
+          "state": "queued",
+          "at": "2026-10-14T13:38:28Z"
+        },
+        {
+          "state": "waiting",
+          "at": "2026-10-14T13:38:27Z"
+        }
+      ]
+    }
+  ],
+  "pullRequests": [
+    {
+      "number": 1,
+      "title": "BOO-1: refuse overlapping bookings of different lengths, at the write",
+      "body": "Paperclip issue BOO-1 (exported record in `evidence/`).\n\n- `259df74` seeded requirement: `app/tests/overlap.test.js`, written before the fix and failing on main (declared exercise, the defect was planted on purpose).\n- `13e6509` fix by the Implementer agent: the overlap test moves inside the INSERT (`INSERT ... SELECT ... WHERE NOT EXISTS`), half-open intervals, confirmed rows only. No schema change, so the previous release still runs against the same schema.\n- Reviewed and approved by the Reviewer agent, then approved in Paperclip by the operator account after its own checks (tests, local D1 race, same race against staging showing the defect).\n\nProduction still needs the separate approval in the protected `production` environment for the merge commit.\n\nThe operator role (Paperclip approvals, GitHub environment approvals and merges) was played by the build session through the operator account; no person reviewed these changes.",
+      "state": "closed",
+      "merged": true,
+      "mergedAt": "2026-10-14T13:50:35Z",
+      "mergedBy": "operator account",
+      "headSha": "13e650970474c7b98270d233efee21b9288a3db2",
+      "commits": [
+        {
+          "sha": "259df74e29a3f1e3df7b795cf06692a67b02977b",
+          "message": "Seeded requirement: overlapping sessions of different lengths must not both be confirmed (fails on main)",
+          "author": "Operator"
+        },
+        {
+          "sha": "13e650970474c7b98270d233efee21b9288a3db2",
+          "message": "Refuse overlapping bookings in the INSERT itself",
+          "author": "Paperclip agent"
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "title": "BOO-2: pin the slot list around the Paris clock change",
+      "body": "Paperclip issue BOO-2. Tests only (`app/tests/clock-change.test.js`). The Implementer's first run was killed on purpose mid-task; Paperclip retried it, and the retry finished the half-written file and corrected one wrong expectation. Reviewed by the Reviewer agent, approved in Paperclip by the operator account. Left unmerged in this rehearsal so the released production commit stays 7e4de34.\n\nThe operator role (Paperclip approvals, GitHub environment approvals and merges) was played by the build session through the operator account; no person reviewed these changes.",
+      "state": "open",
+      "merged": false,
+      "mergedAt": null,
+      "mergedBy": null,
+      "headSha": "2dfd1b3945a19d70e7b5d06cc654bc71abee6ba3",
+      "commits": [
+        {
+          "sha": "2dfd1b3945a19d70e7b5d06cc654bc71abee6ba3",
+          "message": "Pin the 45-minute slot list either side of the Paris clock change",
+          "author": "Paperclip agent"
+        }
+      ]
+    }
+  ],
+  "environments": [
+    {
+      "name": "production",
+      "canAdminsBypass": false,
+      "rules": [
+        {
+          "type": "required_reviewers",
+          "reviewers": 1
+        },
+        {
+          "type": "branch_policy",
+          "reviewers": 0
+        }
+      ]
+    },
+    {
+      "name": "staging",
+      "canAdminsBypass": true,
+      "rules": [
+        {
+          "type": "branch_policy",
+          "reviewers": 0
+        }
+      ]
+    }
+  ]
+}

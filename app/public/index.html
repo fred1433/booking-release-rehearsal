@@ -163,7 +163,7 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
     const h = r.body;
     el.innerHTML = '';
     const tag = document.createElement('b'); tag.textContent = h.env; if (h.env === 'production') tag.className = 'prod';
-    const s = document.createElement('span'); s.textContent = 'release ' + String(h.sha).slice(0, 7) + (h.deployedAt ? ', deployed ' + h.deployedAt.replace('T', ' ').slice(0, 16) + ' UTC' : '');
+    const s = document.createElement('span'); s.textContent = 'build ' + String(h.sha).slice(0, 7) + (h.deployedAt ? ', deployed ' + h.deployedAt.replace('T', ' ').slice(0, 16) + ' UTC' : '') + (h.deployedBy ? ' by the ' + h.deployedBy : '');
     el.append(tag, s);
   }
 
@@ -173,7 +173,7 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
       const b = document.createElement('button'); b.className = 'chip'; b.type = 'button';
       b.setAttribute('aria-pressed', String(d === state.duration));
       b.innerHTML = `${d} min<small>${money(state.prices[d])}</small>`;
-      b.onclick = () => { state.duration = d; state.slot = null; renderDurations(); loadSlots(); };
+      b.onclick = () => { state.duration = d; state.slot = null; state.pending = null; renderDurations(); loadSlots(); };
       box.append(b);
     }
   }
@@ -191,16 +191,25 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
       b.innerHTML = `<span class="dw">${wd}</span><span class="dd">${dm}</span><span class="dw">${mo}</span>`;
       b.setAttribute('aria-label', `${wd} ${dm} ${mo}`);
       b.setAttribute('aria-pressed', String(iso === state.date));
-      b.onclick = () => { state.date = iso; state.slot = null; renderDates(); loadSlots(); };
+      b.onclick = () => { state.date = iso; state.slot = null; state.pending = null; renderDates(); loadSlots(); };
       box.append(b);
     }
   }
 
+  let slotGen = 0; let slotAbort = null;
   async function loadSlots() {
     const box = $('slots'); const empty = $('slotsEmpty');
+    const gen = ++slotGen; const want = { date: state.date, duration: state.duration, sandbox };
+    if (slotAbort) slotAbort.abort();
+    slotAbort = typeof AbortController === 'function' ? new AbortController() : null;
     box.innerHTML = ''; empty.hidden = true; updateSummary();
-    if (!state.date) return;
-    const r = await call(`api/slots?sandbox=${sandbox}&date=${state.date}&durationMin=${state.duration}`);
+    if (!want.date) return;
+    let r;
+    try { r = await call(`api/slots?sandbox=${want.sandbox}&date=${want.date}&durationMin=${want.duration}`, slotAbort ? { signal: slotAbort.signal } : {}); }
+    catch (e) { if (gen !== slotGen) return; r = { status: 0 }; }
+    // A reply for an older selection is dropped before it touches the grid.
+    if (gen !== slotGen || want.date !== state.date || want.duration !== state.duration || want.sandbox !== sandbox) return;
+    box.innerHTML = '';
     if (r.status !== 200) { empty.hidden = false; empty.textContent = 'Times could not be loaded. Reload the page to try again.'; return; }
     const slots = r.body.slots.filter((s) => s.reason !== 'out_of_range');
     if (!slots.length) { empty.hidden = false; empty.textContent = 'The teacher has no sessions that day. Pick another day.'; return; }
@@ -209,7 +218,7 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
       b.innerHTML = `<span class="t">${hhmm(s.learner)}</span><span class="p">${hhmm(s.teacher)} in Paris${s.free ? '' : ', taken'}</span>`;
       b.disabled = !s.free;
       b.setAttribute('aria-pressed', String(state.slot && state.slot.start === s.start));
-      b.onclick = () => { state.slot = s; loadSlotsPressed(); updateSummary(); };
+      b.onclick = () => { state.slot = s; state.pending = null; loadSlotsPressed(); updateSummary(); };
       b.dataset.start = s.start;
       box.append(b);
     }
@@ -218,7 +227,7 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
 
   function updateSummary() {
     const s = state.slot;
-    $('book').disabled = !s || state.busy;
+    $('book').disabled = (!s && !state.pending) || state.busy;
     $('summary').textContent = s
       ? `${state.duration} min, ${s.learner} in Sydney (${hhmm(s.teacher)} in Paris). ${money(state.prices[state.duration])}, simulated.`
       : 'Pick a start time.';
@@ -228,14 +237,40 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
     return call('api/bookings', { method: 'POST', body: JSON.stringify({ sandbox, start, durationMin, idempotencyKey: key, learnerTz: TZ }) });
   }
 
+  // One pending booking at a time, with a stable key: if the reply is lost, the same request is
+  // sent again, and the server returns the original booking instead of creating a second one.
+  async function sendPending() {
+    const p = state.pending;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const r = await book(p.start, p.durationMin, p.key);
+        if (r.status === 201 || r.status === 200) return r;
+        return r; // a definite refusal: the server answered
+      } catch (e) {
+        say(attempt < 3 ? 'No reply from the server. Checking whether the booking went through…' : '', '');
+        await new Promise((res) => setTimeout(res, 600 * attempt));
+      }
+    }
+    return null; // outcome unknown
+  }
   $('book').onclick = async () => {
-    if (!state.slot) return;
+    if (!state.slot && !state.pending) return;
+    if (!state.pending) state.pending = { start: state.slot.start, durationMin: state.duration, key: rnd() };
     state.busy = true; updateSummary();
-    const r = await book(state.slot.start, state.duration);
-    state.busy = false;
-    if (r.status === 201) say(`Booked: ${r.body.booking.learner.local} in Sydney.`, 'ok');
-    else say(r.body && r.body.message ? `Not booked: ${r.body.message}.` : 'Not booked. Try again.', 'err');
-    state.slot = null; await Promise.all([loadSlots(), loadMine()]);
+    try {
+      const r = await sendPending();
+      if (!r) {
+        say('Still no reply. The booking may have gone through: press “Book this session” again to check with the same request.', 'err');
+        return; // keep state.pending so the retry reuses the same key
+      }
+      state.pending = null;
+      if (r.status === 201 || r.status === 200) say(`Booked: ${r.body.booking.learner.local} in Sydney.${r.status === 200 ? ' (Your earlier request had already gone through.)' : ''}`, 'ok');
+      else say(r.body && r.body.message ? `Not booked: ${r.body.message}.` : 'Not booked. Try again.', 'err');
+      state.slot = null;
+    } finally {
+      state.busy = false; updateSummary();
+      await Promise.all([loadSlots(), loadMine()]);
+    }
   };
 
   async function loadMine() {
@@ -316,7 +351,7 @@ footer button{background:none;border:0;padding:0;color:var(--ink);text-decoratio
     } finally { $('lost').disabled = false; await Promise.all([loadSlots(), loadMine()]); }
   };
 
-  $('reset').onclick = async () => { sandbox = newSandbox(); store.set('booking-sandbox', sandbox); say('Fresh sandbox ready.', 'ok'); $('raceOut').hidden = true; $('lostOut').hidden = true; await Promise.all([loadSlots(), loadMine()]); };
+  $("reset").onclick = async () => { state.pending = null; sandbox = newSandbox(); store.set('booking-sandbox', sandbox); say('Fresh sandbox ready.', 'ok'); $('raceOut').hidden = true; $('lostOut').hidden = true; await Promise.all([loadSlots(), loadMine()]); };
 
   (async () => {
     const cfg = await call('api/config').catch(() => null);

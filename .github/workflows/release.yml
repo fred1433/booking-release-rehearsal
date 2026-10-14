@@ -1,16 +1,17 @@
-# Release path for the booking app.
-# - Every push to main is tested, then deployed to staging (no approval).
-# - Production uses the protected "production" environment: a required reviewer must approve
-#   this exact run. The run is pinned to one commit, so approving it cannot release any other commit.
-# - The Cloudflare token exists only as an environment secret; jobs see it only after the gate opens.
+# Release path for the booking app, as used in the recorded run on 14 October 2026.
+# - Every push to main was tested, then deployed to staging (no approval).
+# - The production job used the protected "production" environment: a required reviewer had to approve
+#   that exact run, and the run is pinned to one commit, so approving it cannot release another commit.
+# - What this did NOT do: confine every production-capable credential to that job. The staging job
+#   held the same account-wide Cloudflare token without a reviewer, so it could have deployed production.
+#   A real setup needs a staging credential that cannot touch production resources.
 # - Rollback = run this workflow by hand with an older commit; it goes through the same gate.
 #   The app is checked out from the release commit into rel/, but the deploy and smoke scripts
 #   come from the workflow's own commit: rolling back the app must not roll back the tooling.
+# - After the run the deploy secrets were removed, and the push trigger is off: this workflow now runs
+#   only by hand and will fail without secrets. Later demo builds were deployed locally (see README).
 name: release
 on:
-  push:
-    branches: [main]
-    paths: ["app/**"]
   workflow_dispatch:
     inputs:
       commit:
