@@ -73,7 +73,12 @@ After an independent read-through, the build session changed, outside Paperclip 
 
 After the run, the git history was rewritten once to remove a third-party name from documentation files and to set the merge commit's author to "Operator". Commits up to `13e6509` keep their ids. Later ones changed; the app code did not:
 
-HISTORY_MAPPING
+| Old id (as deployed, and as shown on GitHub run pages) | New id | Note |
+|---|---|---|
+| `1772f30` | `287e6cf` | docs only |
+| `7e4de34` (release B) | `db5931d` | same `app/` tree `9acb214` |
+| `3f0b738` | `42f09fb` | release workflow fix |
+| `8a6507d`, `d621d66` | `ad6c9e3`, `eb531ab` | docs and landing page |
 
 GitHub run and deployment pages still show the old ids.
 

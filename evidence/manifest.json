@@ -219,5 +219,17 @@
     "moving agent commits out of the container (git bundle) and opening the pull requests",
     "release approvals in GitHub"
   ],
-  "releaseGate": "Production deployed only from an approved run in the protected production environment (admin bypass off). The staging job deployed on every push to main with the same account-wide Cloudflare token and no reviewer, so the gate held the production job, not the only key. Both deploy secrets were removed from the GitHub environments at 14:50 UTC after the run; later corrections were deployed locally by the build session."
+  "releaseGate": "Production deployed only from an approved run in the protected production environment (admin bypass off). The staging job deployed on every push to main with the same account-wide Cloudflare token and no reviewer, so the gate held the production job, not the only key. Both deploy secrets were removed from the GitHub environments at 14:50 UTC after the run; later corrections were deployed locally by the build session.",
+  "historyRewrite": {
+    "why": "remove a third-party name from documentation and set the merge author to Operator, after the run",
+    "unchanged": "b231851, 1d8db4b, 259df74, 13e6509, 37d56fd, f503b2f",
+    "mapping": {
+      "1772f30": "287e6cf",
+      "7e4de349e1112cf89b2624f0731951a2a822d773": "db5931d1e5d82aea2967cbce51aee081571cb3fd",
+      "3f0b73810cea0bc98d779607d8355ee8a055459d": "42f09fb780937a7a3010dfeeddea2b1c5ae7b55e",
+      "8a6507d": "ad6c9e3",
+      "d621d66": "eb531ab"
+    },
+    "appTreeOfReleaseB": "9acb214ecf35072d4f38e94488916cab0e87d2d2 (identical before and after)"
+  }
 }
