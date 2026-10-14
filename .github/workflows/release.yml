@@ -4,11 +4,13 @@
 #   this exact run. The run is pinned to one commit, so approving it cannot release any other commit.
 # - The Cloudflare token exists only as an environment secret; jobs see it only after the gate opens.
 # - Rollback = run this workflow by hand with an older commit; it goes through the same gate.
+#   The app is checked out from the release commit into rel/, but the deploy and smoke scripts
+#   come from the workflow's own commit: rolling back the app must not roll back the tooling.
 name: release
 on:
   push:
     branches: [main]
-    paths: ["app/**", ".github/workflows/release.yml"]
+    paths: ["app/**"]
   workflow_dispatch:
     inputs:
       commit:
@@ -55,11 +57,12 @@ jobs:
       url: https://theaipipe.com/demos/paperclip-booking-rehearsal/staging/
     steps:
       - uses: actions/checkout@v4
-        with: { ref: "${{ needs.resolve.outputs.sha }}" }
+      - uses: actions/checkout@v4
+        with: { ref: "${{ needs.resolve.outputs.sha }}", path: rel }
       - uses: actions/setup-node@v4
         with: { node-version: 24 }
       - name: Migrate and deploy staging
-        working-directory: app
+        working-directory: rel/app
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -76,13 +79,14 @@ jobs:
       url: https://theaipipe.com/demos/paperclip-booking-rehearsal/app/
     steps:
       - uses: actions/checkout@v4
-        with: { ref: "${{ needs.resolve.outputs.sha }}" }
+      - uses: actions/checkout@v4
+        with: { ref: "${{ needs.resolve.outputs.sha }}", path: rel }
       - uses: actions/setup-node@v4
         with: { node-version: 24 }
       - name: Confirm the approved run releases the tested commit
-        run: test "$(git rev-parse HEAD)" = "${{ needs.resolve.outputs.sha }}"
+        run: test "$(git -C rel rev-parse HEAD)" = "${{ needs.resolve.outputs.sha }}"
       - name: Migrate and deploy production
-        working-directory: app
+        working-directory: rel/app
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
