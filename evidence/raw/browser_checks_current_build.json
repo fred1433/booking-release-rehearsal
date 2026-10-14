@@ -1,0 +1,15 @@
+{
+ "lost_reply_recovers": {
+  "ok": true,
+  "message": "Booked: Fri, 16 Oct, 16:00 in Sydney. (Your earlier request had already gone through.)",
+  "confirmed_rows": 1,
+  "book_button_enabled_after": true,
+  "errors": []
+ },
+ "stale_slots_dropped": {
+  "ok": true,
+  "selected": "2026-10-19",
+  "shown": 7,
+  "expected": 7
+ }
+}

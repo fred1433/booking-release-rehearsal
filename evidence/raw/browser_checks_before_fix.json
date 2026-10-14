@@ -1,0 +1,5 @@
+{
+  "note": "Output of scripts/e2e/booking_page.py against the earlier staging build 9696ab7, run on 14 Oct 2026 at about 15:00 UTC, before the page fixes. Copied from the session's terminal; that build is no longer deployed.",
+  "lost_reply_recovers": {"ok": false, "message": "Fresh sandbox ready.", "confirmed_rows": 0, "book_button_enabled_after": false, "errors": ["Failed to fetch"]},
+  "stale_slots_dropped": {"ok": false, "shown": 14, "expected": 7}
+}
