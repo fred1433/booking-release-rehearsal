@@ -27,14 +27,15 @@ a:hover{color:var(--tape)}
 .page{max-width:1240px;margin:0 auto;padding:0 32px}
 
 /* Title block */
-header{padding:64px 0 36px;border-bottom:1px solid var(--rule)}
-h1{font:600 clamp(44px,6.6vw,92px)/.98 var(--serif);letter-spacing:-.02em;margin:0;max-width:13ch}
+header{padding:48px 0 32px;border-bottom:1px solid var(--rule)}
+h1{font:600 clamp(42px,5.6vw,80px)/.98 var(--serif);letter-spacing:-.02em;margin:0;max-width:22ch}
+.nw{white-space:nowrap}
 .disclaimer{margin:22px 0 0;font-size:16px;color:var(--ink);display:inline-block;padding:6px 12px;background:var(--wall);border-left:4px solid var(--standby)}
 .lede{margin:22px 0 0;max-width:62ch;font-size:19px;color:var(--pencil)}
 .lede b{color:var(--ink);font-weight:600}
 
 /* Spread: the released app on the left, the calls on the right */
-.spread{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:56px;padding:48px 0 64px;align-items:start}
+.spread{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:56px;padding:36px 0 64px;align-items:start}
 .stage{position:sticky;top:20px}
 .frame{position:relative;background:#fff;border:1px solid var(--rule);border-radius:14px;overflow:hidden}
 /* spike tape marks at the corners, as on a rehearsal floor */
@@ -117,7 +118,7 @@ footer{border-top:1px solid var(--rule);padding:18px 0 40px;color:var(--pencil);
 <body>
 <div class="page">
 <header>
-  <h1>Paperclip booking-release rehearsal</h1>
+  <h1>Paperclip <span class="nw">booking-release</span> rehearsal</h1>
   <p class="disclaimer">Independent demonstration using synthetic data. No access to any client's code or Paperclip instance. Payments are not connected.</p>
   <p class="lede">One small change to a private-session booking app, taken through a real Paperclip instance and a protected release on 14 October 2026: <b>a double-booking defect planted on purpose, fixed by one agent, reviewed by another, approved by a human account, released, rolled back and released again.</b> Every step below links to its record.</p>
 </header>
@@ -237,8 +238,9 @@ footer{border-top:1px solid var(--rule);padding:18px 0 40px;color:var(--pencil);
   const fit = () => {
     try {
       const d = f.contentDocument; if (!d || !d.body) return;
-      const h = Math.max(d.body.scrollHeight, d.documentElement.scrollHeight);
-      if (h > 200) f.style.height = (h + 8) + 'px';
+      const m = d.querySelector('main');
+      const h = m ? m.offsetHeight : d.body.scrollHeight;
+      if (h > 200) f.style.height = (h + 4) + 'px';
     } catch (e) { /* cross-origin or not ready: keep the fixed height */ }
   };
   f.addEventListener('load', () => {
